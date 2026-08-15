@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { INDUSTRIES_DATA } from '../data/contentData';
 import { ChevronRight } from 'lucide-react';
+import { AnimatedImage } from './AnimatedImage';
+import { motion } from 'motion/react';
 
 interface IndustriesSectionProps {
   onBookClick: () => void;
@@ -38,20 +40,29 @@ export const IndustriesSection: React.FC<IndustriesSectionProps> = ({ onBookClic
 
         {/* 10 Industry Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {INDUSTRIES_DATA.map((ind) => (
-            <div
+          {INDUSTRIES_DATA.map((ind, index) => (
+            <motion.div
               key={ind.id}
               id={`industry-card-${ind.id}`}
               onClick={() => handleIndustryClick(ind.id)}
+              initial={{ opacity: 0, y: 24, scale: 0.96 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.1 }}
+              transition={{
+                duration: 0.55,
+                delay: (index % 4) * 0.08,
+                ease: [0.21, 0.47, 0.32, 0.98],
+              }}
               className="group bg-white/95 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-white hover:border-black flex flex-col cursor-pointer transform hover:-translate-y-1"
             >
               {/* Image thumbnail */}
               <div className="relative h-44 overflow-hidden bg-gray-100 border-b border-gray-100">
-                <img
+                <AnimatedImage
                   src={ind.image}
                   alt={ind.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  referrerPolicy="no-referrer"
+                  wrapperClassName="w-full h-full"
+                  scale={false}
                   onError={(e) => {
                     const target = e.currentTarget;
                     if (ind.id === 'financial' && target.src.includes('Financial%20services')) {
@@ -72,7 +83,7 @@ export const IndustriesSection: React.FC<IndustriesSectionProps> = ({ onBookClic
                     }
                   }}
                 />
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 pointer-events-none">
                   <span className="text-xs font-bold uppercase tracking-widest text-[#9ce2c7] flex items-center space-x-1">
                     <span>View Growth Strategy</span>
                     <ChevronRight className="w-3.5 h-3.5 text-[#9ce2c7]" />
@@ -91,7 +102,7 @@ export const IndustriesSection: React.FC<IndustriesSectionProps> = ({ onBookClic
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 

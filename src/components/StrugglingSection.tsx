@@ -1,6 +1,8 @@
 import React from 'react';
 import { MARKETING_LAPTOP_IMG } from '../data/contentData';
 import { Search, BarChart2, Share2, FileText, MousePointerClick } from 'lucide-react';
+import { AnimatedImage } from './AnimatedImage';
+import { motion } from 'motion/react';
 
 export const StrugglingSection: React.FC = () => {
   return (
@@ -42,12 +44,19 @@ export const StrugglingSection: React.FC = () => {
 
           {/* Right Image Column with Overlay Tags */}
           <div className="lg:col-span-5 relative">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/80 bg-white p-2">
-              <img
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.96 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.75, ease: [0.21, 0.47, 0.32, 0.98] }}
+              className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/80 bg-white p-2"
+            >
+              <AnimatedImage
                 src={MARKETING_LAPTOP_IMG}
                 alt="Digital Marketer evaluating online growth challenge"
                 className="w-full h-[400px] sm:h-[480px] object-cover rounded-2xl"
-                referrerPolicy="no-referrer"
+                wrapperClassName="w-full h-[400px] sm:h-[480px] rounded-2xl"
+                scale={false}
                 onError={(e) => {
                   const target = e.currentTarget;
                   if (target.src.includes('Confused%20Marketer')) {
@@ -57,35 +66,65 @@ export const StrugglingSection: React.FC = () => {
               />
 
               {/* SEM Floating Overlay Tag */}
-              <div className="absolute top-8 left-6 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="absolute top-8 left-6 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md"
+              >
                 <MousePointerClick className="w-4 h-4 text-black" />
                 <span>SEM</span>
-              </div>
+              </motion.div>
 
               {/* SEO Overlay Tag */}
-              <div className="absolute top-28 left-10 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="absolute top-28 left-10 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md"
+              >
                 <Search className="w-4 h-4 text-black" />
                 <span>SEO</span>
-              </div>
+              </motion.div>
 
               {/* Analytics Overlay Tag */}
-              <div className="absolute top-12 right-6 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.35 }}
+                className="absolute top-12 right-6 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md"
+              >
                 <BarChart2 className="w-4 h-4 text-black" />
                 <span>Analytics</span>
-              </div>
+              </motion.div>
 
               {/* Social Media Tag */}
-              <div className="absolute bottom-20 left-8 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="absolute bottom-20 left-8 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md"
+              >
                 <Share2 className="w-4 h-4 text-black" />
                 <span>Social Media</span>
-              </div>
+              </motion.div>
 
               {/* Content Marketing Tag */}
-              <div className="absolute bottom-10 right-6 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.45 }}
+                className="absolute bottom-10 right-6 bg-white/95 backdrop-blur-sm text-[#131d17] px-4 py-2 rounded-full border border-gray-100 flex items-center space-x-2 font-bold text-xs uppercase tracking-wider shadow-md"
+              >
                 <FileText className="w-4 h-4 text-black" />
                 <span>Content Marketing</span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
 
         </div>

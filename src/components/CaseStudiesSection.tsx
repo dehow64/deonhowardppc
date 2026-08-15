@@ -2,6 +2,8 @@ import React from 'react';
 import { CASE_STUDIES } from '../data/contentData';
 import { CaseStudy } from '../types';
 import { ArrowUpRight } from 'lucide-react';
+import { AnimatedImage } from './AnimatedImage';
+import { motion } from 'motion/react';
 
 interface CaseStudiesSectionProps {
   onSelectCaseStudy: (study: CaseStudy) => void;
@@ -27,20 +29,29 @@ export const CaseStudiesSection: React.FC<CaseStudiesSectionProps> = ({ onSelect
 
         {/* 3 Case Study Banner Cards Grid */}
         <div className="space-y-8 max-w-5xl mx-auto">
-          {CASE_STUDIES.map((study) => (
-            <div
+          {CASE_STUDIES.map((study, idx) => (
+            <motion.div
               key={study.id}
               id={`case-study-card-${study.id}`}
               onClick={() => onSelectCaseStudy(study)}
+              initial={{ opacity: 0, y: 30, scale: 0.98 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{
+                duration: 0.65,
+                delay: idx * 0.1,
+                ease: [0.21, 0.47, 0.32, 0.98],
+              }}
               className="group relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 hover:border-[#9ce2c7] transition-all duration-300 cursor-pointer bg-[#1a1a1a]"
             >
               {/* Background Cover Image with Gradient */}
               <div className="relative h-64 sm:h-72 w-full overflow-hidden">
-                <img
+                <AnimatedImage
                   src={study.image}
                   alt={study.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40"
-                  referrerPolicy="no-referrer"
+                  wrapperClassName="w-full h-full"
+                  scale={false}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-transparent"></div>
               </div>
@@ -64,8 +75,8 @@ export const CaseStudiesSection: React.FC<CaseStudiesSectionProps> = ({ onSelect
 
                   {/* Metrics Row */}
                   <div className="grid grid-cols-3 gap-4 pt-3 border-t border-white/10">
-                    {study.metrics.map((m, idx) => (
-                      <div key={idx}>
+                    {study.metrics.map((m, mIdx) => (
+                      <div key={mIdx}>
                         <p className="text-xl sm:text-3xl font-extrabold text-[#9ce2c7]">{m.value}</p>
                         <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-300 mt-0.5">{m.label}</p>
                       </div>
@@ -74,7 +85,7 @@ export const CaseStudiesSection: React.FC<CaseStudiesSectionProps> = ({ onSelect
                 </div>
               </div>
 
-            </div>
+            </motion.div>
           ))}
         </div>
 

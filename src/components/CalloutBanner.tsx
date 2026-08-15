@@ -1,6 +1,8 @@
 import React from 'react';
 import { CALLOUT_PHONE_IMG, PHONE_NUMBER } from '../data/contentData';
 import { Phone } from 'lucide-react';
+import { AnimatedImage } from './AnimatedImage';
+import { motion } from 'motion/react';
 
 export const CalloutBanner: React.FC = () => {
   return (
@@ -9,14 +11,21 @@ export const CalloutBanner: React.FC = () => {
         
         {/* Centered Circular Image */}
         <div className="flex justify-center">
-          <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-2 border-[#9ce2c7]/40 shadow-2xl p-1 bg-[#9ce2c7]/10">
-            <img
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: 15 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.65, ease: [0.21, 0.47, 0.32, 0.98] }}
+            className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-2 border-[#9ce2c7]/40 shadow-2xl p-1 bg-[#9ce2c7]/10"
+          >
+            <AnimatedImage
               src={CALLOUT_PHONE_IMG}
               alt="Consultant on growth strategy call"
               className="w-full h-full object-cover rounded-full"
-              referrerPolicy="no-referrer"
+              wrapperClassName="w-full h-full rounded-full"
+              scale={false}
             />
-          </div>
+          </motion.div>
         </div>
 
         {/* Heading */}

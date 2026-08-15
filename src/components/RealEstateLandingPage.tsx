@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AnimatedImage } from './AnimatedImage';
 import { 
   Building, 
   Home, 
@@ -199,13 +200,14 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
             {/* Right Hero Visual Card */}
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-[#1a1a1a]">
-                <img
+                <AnimatedImage
                   src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1000&q=80"
                   alt="Luxury Modern Architecture Real Estate"
                   className="w-full h-[420px] object-cover opacity-85"
-                  referrerPolicy="no-referrer"
+                  wrapperClassName="w-full h-[420px]"
+                  scale={false}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/40 to-transparent pointer-events-none"></div>
 
                 {/* Floating Metric Badges */}
                 <div className="absolute bottom-6 left-6 right-6 p-5 bg-[#121212]/90 backdrop-blur-md rounded-2xl border border-white/10 space-y-3">
@@ -1069,13 +1071,14 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
             
             {/* Image Column */}
             <div className="lg:col-span-5 relative min-h-[300px]">
-              <img
+              <AnimatedImage
                 src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1000&q=80"
                 alt="Real Estate Case Study Property"
                 className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
+                wrapperClassName="w-full h-full absolute inset-0"
+                scale={false}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#121212] lg:bg-gradient-to-r lg:from-transparent lg:to-[#121212]"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#121212] lg:bg-gradient-to-r lg:from-transparent lg:to-[#121212] pointer-events-none"></div>
               
               <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 text-[10px] font-bold uppercase tracking-widest text-[#9ce2c7]">
                 [Redacted Client Portfolio]

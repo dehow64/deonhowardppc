@@ -1,6 +1,7 @@
 import React from 'react';
 import { CaseStudy } from '../types';
 import { X, CheckCircle2, AlertCircle, TrendingUp, ShieldCheck, FileText, ExternalLink } from 'lucide-react';
+import { AnimatedImage } from './AnimatedImage';
 
 interface CaseStudyModalProps {
   study: CaseStudy | null;
@@ -17,11 +18,12 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ study, onClose, 
         
         {/* Cover image header */}
         <div className="relative h-56 sm:h-64 w-full">
-          <img
+          <AnimatedImage
             src={study.image}
             alt={study.title}
             className="w-full h-full object-cover opacity-60"
-            referrerPolicy="no-referrer"
+            wrapperClassName="w-full h-full absolute inset-0"
+            scale={false}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/60 to-transparent"></div>
           
