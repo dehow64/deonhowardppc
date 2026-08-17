@@ -40,17 +40,20 @@ import {
   Share2
 } from 'lucide-react';
 import { PHONE_NUMBER } from '../data/contentData';
+import { IndustrySubNav } from './IndustrySubNav';
 
 interface RealEstateLandingPageProps {
   onBackToMain: () => void;
   onBookClick: () => void;
   onFormSubmitted: (data: any) => void;
+  onSelectIndustry?: (industryId: string) => void;
 }
 
 export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
   onBackToMain,
   onBookClick,
-  onFormSubmitted
+  onFormSubmitted,
+  onSelectIndustry
 }) => {
   // Calendar & Form State
   const [formData, setFormData] = useState({
@@ -136,6 +139,13 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
           </div>
         </div>
       </header>
+
+      {/* Industry SubNav & URL Path Bar */}
+      <IndustrySubNav
+        currentIndustryId="real-estate"
+        onBackToMain={onBackToMain}
+        onSelectIndustry={onSelectIndustry}
+      />
 
       {/* SECTION 1: HERO SECTION */}
       <section id="re-hero" className="relative py-20 lg:py-28 overflow-hidden border-b border-white/10">

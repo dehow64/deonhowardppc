@@ -69,10 +69,33 @@ export const INDUSTRY_ROUTES: IndustryRoute[] = [
 ];
 
 export const getIndustryFromPath = (pathname: string = window.location.pathname, hash: string = window.location.hash): string | null => {
-  // Check pathname first
-  const cleanPath = pathname.toLowerCase().replace(/^\/+|\/+$/g, '');
+  if (typeof window === 'undefined') return null;
+
+  // 1. Check URL search params (e.g. ?p=/real-estate from 404 redirect, or ?page=real-estate, or ?industry=real-estate)
+  const searchParams = new URLSearchParams(window.location.search);
+  const pParam = searchParams.get('p') || searchParams.get('path') || searchParams.get('page') || searchParams.get('industry') || searchParams.get('vertical');
   
-  // Also check if path has /industries/...
+  if (pParam) {
+    const cleanParam = pParam.toLowerCase().replace(/^\/+|\/+$/g, '');
+    const segments = cleanParam.split('/');
+    const target = segments[segments.length - 1];
+
+    for (const route of INDUSTRY_ROUTES) {
+      if (route.aliases.includes(target) || route.slug === target || route.id === target) {
+        // Clean up the URL to clean path without the query parameter
+        try {
+          const cleanUrl = `/${route.slug}${window.location.hash}`;
+          window.history.replaceState({ industryId: route.id }, '', cleanUrl);
+        } catch (e) {
+          // ignore in environments with restricted history
+        }
+        return route.id;
+      }
+    }
+  }
+
+  // 2. Check standard pathname
+  const cleanPath = pathname.toLowerCase().replace(/^\/+|\/+$/g, '');
   const segments = cleanPath.split('/');
   const targetSegment = segments[segments.length - 1];
 
@@ -84,21 +107,14 @@ export const getIndustryFromPath = (pathname: string = window.location.pathname,
     }
   }
 
-  // Check URL search params as fallback (e.g. ?industry=real-estate)
-  if (typeof window !== 'undefined') {
-    const searchParams = new URLSearchParams(window.location.search);
-    const indParam = searchParams.get('industry') || searchParams.get('vertical');
-    if (indParam) {
-      const match = INDUSTRY_ROUTES.find(r => r.aliases.includes(indParam.toLowerCase()) || r.id === indParam || r.slug === indParam);
-      if (match) return match.id;
-    }
-  }
-
-  // Check hash fallback (e.g. #real-estate or #/real-estate)
+  // 3. Check hash fallback (e.g. #/real-estate or #real-estate)
   if (hash) {
-    const cleanHash = hash.replace(/^#\/?/, '').toLowerCase();
+    const cleanHash = hash.replace(/^#\/?/, '').toLowerCase().replace(/^\/+|\/+$/g, '');
+    const hashSegments = cleanHash.split('/');
+    const hashTarget = hashSegments[hashSegments.length - 1];
+
     for (const route of INDUSTRY_ROUTES) {
-      if (route.aliases.includes(cleanHash) || route.slug === cleanHash || route.id === cleanHash) {
+      if (route.aliases.includes(hashTarget) || route.slug === hashTarget || route.id === hashTarget) {
         return route.id;
       }
     }

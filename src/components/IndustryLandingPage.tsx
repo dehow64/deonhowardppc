@@ -35,6 +35,7 @@ import {
   Tag
 } from 'lucide-react';
 import { PHONE_NUMBER } from '../data/contentData';
+import { IndustrySubNav } from './IndustrySubNav';
 
 interface IndustryConfig {
   id: string;
@@ -887,13 +888,15 @@ interface IndustryLandingPageProps {
   onBackToMain: () => void;
   onBookClick: () => void;
   onFormSubmitted: (data: any) => void;
+  onSelectIndustry?: (industryId: string) => void;
 }
 
 export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
   industryId,
   onBackToMain,
   onBookClick,
-  onFormSubmitted
+  onFormSubmitted,
+  onSelectIndustry
 }) => {
   // Select config or fallback to retail
   const config = INDUSTRY_CONFIGS[industryId] || INDUSTRY_CONFIGS['retail'];
@@ -981,6 +984,13 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
           </div>
         </div>
       </header>
+
+      {/* Industry SubNav & URL Path Bar */}
+      <IndustrySubNav
+        currentIndustryId={industryId}
+        onBackToMain={onBackToMain}
+        onSelectIndustry={onSelectIndustry}
+      />
 
       {/* SECTION 1: HERO SECTION */}
       <section id="ind-hero" className="relative py-20 lg:py-28 overflow-hidden border-b border-white/10">

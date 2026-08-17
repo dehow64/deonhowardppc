@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script>
+      // Single Page Application redirect script for static hosts without URL rewriting
+      // Preserves the requested path and query parameters
+      (function() {
+        var path = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+        
+        // Strip base path if applicable and redirect to root with 'p' query parameter
+        var destination = '/' + (path.replace(/^\//, '') ? '?p=' + encodeURIComponent(path) : '') + (search ? '&' + search.replace(/^\?/, '') : '') + hash;
+        window.location.replace(destination);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to page...</p>
+  </body>
+</html>

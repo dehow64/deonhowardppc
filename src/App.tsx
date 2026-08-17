@@ -101,6 +101,7 @@ export default function App() {
           onBackToMain={handleNavToMain}
           onBookClick={handleBookClick}
           onFormSubmitted={handleFormSubmitted}
+          onSelectIndustry={handleSelectIndustry}
         />
       ) : activeIndustryView ? (
         <IndustryLandingPage
@@ -108,6 +109,7 @@ export default function App() {
           onBackToMain={handleNavToMain}
           onBookClick={handleBookClick}
           onFormSubmitted={handleFormSubmitted}
+          onSelectIndustry={handleSelectIndustry}
         />
       ) : (
         <>
