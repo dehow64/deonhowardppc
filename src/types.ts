@@ -50,4 +50,14 @@ export interface ContactFormData {
   message: string;
   selectedDate: string;
   selectedTimeSlot: string;
+  propertyType?: string;
+  workspaceStatus?: {
+    calendarCreated: boolean;
+    calendarEventLink?: string;
+    calendarEventId?: string;
+    adminEmailSent: boolean;
+    clientEmailSent: boolean;
+    serverSaved: boolean;
+    errorDetails?: string;
+  };
 }

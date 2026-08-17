@@ -79,19 +79,8 @@ export default function App() {
     setSubmissionSuccessData(data);
   };
 
-  const handleQuickBookSuccess = (details: { date: string; time: string; name: string; email: string }) => {
-    setSubmissionSuccessData({
-      firstName: details.name.split(' ')[0] || details.name,
-      lastName: details.name.split(' ').slice(1).join(' ') || '',
-      email: details.email,
-      phone: '(708) 669-6410',
-      companyName: 'Growth Client',
-      service: 'Paid Search & Meta Ads Strategy',
-      budget: '$5,000 - $10,000/mo',
-      message: 'Strategy Call booked via quick popup.',
-      selectedDate: details.date,
-      selectedTimeSlot: details.time
-    });
+  const handleQuickBookSuccess = (data: ContactFormData) => {
+    setSubmissionSuccessData(data);
   };
 
   return (

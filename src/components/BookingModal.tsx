@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
-import { X, Calendar as CalendarIcon, Clock, Check } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Clock, Check, Loader2, Send } from 'lucide-react';
+import { scheduleGoogleWorkspaceAppointment, TARGET_ADMIN_EMAIL } from '../services/googleWorkspace';
+import { ContactFormData } from '../types';
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (details: { date: string; time: string; name: string; email: string }) => void;
+  onSuccess: (data: ContactFormData) => void;
 }
 
 export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [company, setCompany] = useState('');
   const [selectedDay, setSelectedDay] = useState(6);
   const [selectedSlot, setSelectedSlot] = useState('10:00 AM - 11:00 AM');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
@@ -24,15 +28,37 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
     '02:00 PM - 03:00 PM'
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSuccess({
-      date: `August ${selectedDay}, 2026`,
-      time: selectedSlot,
-      name,
-      email
-    });
-    onClose();
+    setIsSubmitting(true);
+
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0] || 'Client';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    const submissionData: ContactFormData = {
+      firstName,
+      lastName,
+      email,
+      phone: phone || '(708) 669-6410',
+      companyName: company || 'Growth Partner',
+      service: 'Custom Marketing Automation System',
+      budget: '$5,000 - $10,000/mo',
+      message: 'Strategy Consultation booked via interactive booking modal.',
+      selectedDate: `August ${selectedDay}, 2026`,
+      selectedTimeSlot: selectedSlot
+    };
+
+    try {
+      const workspaceResult = await scheduleGoogleWorkspaceAppointment(submissionData);
+      submissionData.workspaceStatus = workspaceResult;
+    } catch (err) {
+      console.error('Error booking workspace appointment in modal:', err);
+    } finally {
+      setIsSubmitting(false);
+      onSuccess(submissionData);
+      onClose();
+    }
   };
 
   return (
@@ -54,11 +80,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
             <CalendarIcon className="w-5 h-5 text-black" />
           </div>
           <h3 className="text-2xl font-bold text-[#131d17]">
-            Schedule Free Automation Strategy Call
+            Schedule Free Strategy Call
           </h3>
           <p className="text-xs font-bold uppercase tracking-widest text-black flex items-center justify-center space-x-1">
             <Clock className="w-3.5 h-3.5 text-black" />
-            <span>1 Hour • Custom AI & Automation Blueprint</span>
+            <span>Syncs with {TARGET_ADMIN_EMAIL}</span>
           </p>
         </div>
 
@@ -91,18 +117,33 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#131d17] mb-1">
-              Phone Number *
-            </label>
-            <input
-              type="tel"
-              required
-              placeholder="(708) 000-0000"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 focus:border-black rounded-xl py-2.5 px-3 text-xs font-bold text-gray-900 outline-none"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#131d17] mb-1">
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                required
+                placeholder="(708) 000-0000"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 focus:border-black rounded-xl py-2.5 px-3 text-xs font-bold text-gray-900 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#131d17] mb-1">
+                Company Name
+              </label>
+              <input
+                type="text"
+                placeholder="Acme Real Estate"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 focus:border-black rounded-xl py-2.5 px-3 text-xs font-bold text-gray-900 outline-none"
+              />
+            </div>
           </div>
 
           {/* Date Selector */}
@@ -157,9 +198,20 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
 
           <button
             type="submit"
-            className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 rounded-full shadow-lg transition-all mt-4 cursor-pointer border border-white/20 transform hover:-translate-y-0.5"
+            disabled={isSubmitting}
+            className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 rounded-full shadow-lg transition-all mt-4 cursor-pointer border border-white/20 transform hover:-translate-y-0.5 disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
-            Confirm & Book Session
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-[#9ce2c7]" />
+                <span>Scheduling on Google Calendar...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 text-[#9ce2c7]" />
+                <span>Confirm & Schedule on Google Calendar</span>
+              </>
+            )}
           </button>
         </form>
 

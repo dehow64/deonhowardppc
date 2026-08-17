@@ -15,10 +15,46 @@ async function startServer() {
   });
 
   // Contact form submission API endpoint
+  const appointmentsStore: any[] = [];
+
   app.post("/api/contact", (req, res) => {
-    const { fullName, email, phone, companyName, service, budget, message } = req.body;
-    console.log("Received contact form submission:", { fullName, email, phone, companyName, service, budget });
-    res.json({ success: true, message: "Inquiry received successfully" });
+    const { fullName, email, phone, companyName, service, budget, message, selectedDate, selectedTimeSlot } = req.body;
+    console.log("📨 Received contact form submission for deonhowardppc@gmail.com:", {
+      fullName,
+      email,
+      phone,
+      companyName,
+      service,
+      budget,
+      selectedDate,
+      selectedTimeSlot,
+      receivedAt: new Date().toISOString()
+    });
+    appointmentsStore.push({
+      type: "contact",
+      ...req.body,
+      id: `lead-${Date.now()}`,
+      receivedAt: new Date().toISOString()
+    });
+    res.json({ success: true, message: "Inquiry received and logged successfully" });
+  });
+
+  // Appointments API endpoint
+  app.post("/api/appointments", (req, res) => {
+    const appointmentData = {
+      id: `apt-${Date.now()}`,
+      ...req.body,
+      targetAdminEmail: "deonhowardppc@gmail.com",
+      status: "scheduled",
+      createdAt: new Date().toISOString()
+    };
+    appointmentsStore.push(appointmentData);
+    console.log("📅 Strategy Consultation appointment recorded for deonhowardppc@gmail.com:", appointmentData);
+    res.json({ success: true, appointment: appointmentData });
+  });
+
+  app.get("/api/appointments", (req, res) => {
+    res.json({ appointments: appointmentsStore });
   });
 
   // Vite middleware for development vs Static serving for production

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Check, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Calendar as CalendarIcon, Loader2, Send } from 'lucide-react';
 import { ContactFormData } from '../types';
+import { GoogleConnectBar } from './GoogleConnectBar';
+import { scheduleGoogleWorkspaceAppointment, TARGET_ADMIN_EMAIL } from '../services/googleWorkspace';
 
 interface ContactFormSectionProps {
   onFormSubmitted: (data: ContactFormData) => void;
@@ -17,6 +19,8 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
     budget: '$5,000 - $10,000/mo',
     message: ''
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Calendar State
   const [selectedDay, setSelectedDay] = useState<number>(6);
@@ -46,13 +50,26 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onFormSubmitted({
+    setIsSubmitting(true);
+
+    const submissionPayload: ContactFormData = {
       ...formData,
       selectedDate: `${currentMonth.split(' ')[0]} ${selectedDay}, ${currentMonth.split(' ')[1]}`,
       selectedTimeSlot: selectedSlot
-    });
+    };
+
+    try {
+      // Execute Google Workspace integration (Calendar & Gmail) and Server Logging
+      const workspaceResult = await scheduleGoogleWorkspaceAppointment(submissionPayload);
+      submissionPayload.workspaceStatus = workspaceResult;
+    } catch (err) {
+      console.error('Error during workspace appointment scheduling:', err);
+    } finally {
+      setIsSubmitting(false);
+      onFormSubmitted(submissionPayload);
+    }
   };
 
   return (
@@ -60,7 +77,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Heading & Subtitle */}
-        <div className="text-center space-y-3 mb-12">
+        <div className="text-center space-y-3 mb-10">
           <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-black">
             09 / Schedule Consultation
           </div>
@@ -73,6 +90,9 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
             Stop wasting hours on manual marketing busywork or disconnected campaigns. Book a free 1-on-1 strategy call today to discover how a custom marketing automation system can scale your leads and sales predictably.
           </p>
         </div>
+
+        {/* Google Workspace Account Connection Banner */}
+        <GoogleConnectBar />
 
         {/* Form Container Card */}
         <div className="bg-white/95 rounded-3xl p-6 sm:p-10 shadow-xl border border-white">
@@ -336,9 +356,20 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
               <button
                 type="submit"
                 id="contact-form-submit-btn"
-                className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 px-10 rounded-full transition-all shadow-lg cursor-pointer border border-white/20 transform hover:-translate-y-0.5"
+                disabled={isSubmitting}
+                className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 px-10 rounded-full transition-all shadow-lg cursor-pointer border border-white/20 transform hover:-translate-y-0.5 disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
-                Submit Request
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-[#9ce2c7]" />
+                    <span>Scheduling & Syncing with Google Calendar...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 text-[#9ce2c7]" />
+                    <span>Submit & Book Strategy Consultation</span>
+                  </>
+                )}
               </button>
             </div>
 

@@ -32,10 +32,15 @@ import {
   GraduationCap,
   Plane,
   Dumbbell,
-  Tag
+  Tag,
+  Loader2,
+  Send
 } from 'lucide-react';
 import { PHONE_NUMBER } from '../data/contentData';
 import { IndustrySubNav } from './IndustrySubNav';
+import { GoogleConnectBar } from './GoogleConnectBar';
+import { scheduleGoogleWorkspaceAppointment } from '../services/googleWorkspace';
+import { ContactFormData } from '../types';
 
 interface IndustryConfig {
   id: string;
@@ -916,6 +921,7 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
   const [selectedDay, setSelectedDay] = useState<number>(6);
   const [selectedSlot, setSelectedSlot] = useState<string>('10:00 AM');
   const [showMoreSlots, setShowMoreSlots] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const currentMonth = 'August 2026';
 
   const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -928,14 +934,26 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onFormSubmitted({
+    setIsSubmitting(true);
+
+    const submissionPayload: ContactFormData = {
       ...formData,
       service: `Industry Acquisition Engine (${config.title})`,
       selectedDate: `${currentMonth.split(' ')[0]} ${selectedDay}, ${currentMonth.split(' ')[1]}`,
       selectedTimeSlot: selectedSlot
-    });
+    };
+
+    try {
+      const wsResult = await scheduleGoogleWorkspaceAppointment(submissionPayload);
+      submissionPayload.workspaceStatus = wsResult;
+    } catch (err) {
+      console.error('Error in industry appointment scheduling:', err);
+    } finally {
+      setIsSubmitting(false);
+      onFormSubmitted(submissionPayload);
+    }
   };
 
   return (
@@ -1443,6 +1461,9 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
             </p>
           </div>
 
+          {/* Google Workspace Account Connection */}
+          <GoogleConnectBar />
+
           {/* Form container */}
           <div className="bg-white text-gray-900 rounded-3xl p-6 sm:p-10 shadow-2xl border border-gray-100">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -1619,9 +1640,20 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
               <button
                 type="submit"
                 id="ind-cta-submit-btn"
-                className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-lg transition-all cursor-pointer border border-white/20 transform hover:-translate-y-0.5"
+                disabled={isSubmitting}
+                className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-lg transition-all cursor-pointer border border-white/20 transform hover:-translate-y-0.5 disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
-                Book Strategy Session
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-[#9ce2c7]" />
+                    <span>Scheduling & Syncing with Google Workspace...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 text-[#9ce2c7]" />
+                    <span>Book Strategy Session & Sync Calendar</span>
+                  </>
+                )}
               </button>
 
             </form>
