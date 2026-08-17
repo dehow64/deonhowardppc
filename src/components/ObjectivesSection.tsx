@@ -1,6 +1,6 @@
 import React from 'react';
 import { OBJECTIVES_DATA } from '../data/contentData';
-import { Users, CreditCard, Globe, Repeat } from 'lucide-react';
+import { Users, CreditCard, Globe, Repeat, Sparkles } from 'lucide-react';
 
 export const ObjectivesSection: React.FC = () => {
   const getIcon = (iconName: string) => {
@@ -14,7 +14,7 @@ export const ObjectivesSection: React.FC = () => {
       case 'Repeat':
         return <Repeat className="w-7 h-7 text-[#9ce2c7]" />;
       default:
-        return <Users className="w-7 h-7 text-[#9ce2c7]" />;
+        return <Sparkles className="w-7 h-7 text-[#9ce2c7]" />;
     }
   };
 
@@ -24,11 +24,14 @@ export const ObjectivesSection: React.FC = () => {
         
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-2">
           <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#9ce2c7]">
-            04 / Scalable Outcomes
+            04 / Core Objectives
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white">
             Business Objectives <span className="text-[#9ce2c7]">Supported</span>
           </h2>
+          <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto font-sans">
+            How AI-powered websites, intelligent ad campaigns, and automated workflows drive tangible growth across every stage of your business.
+          </p>
         </div>
 
         {/* 4 Column Grid */}

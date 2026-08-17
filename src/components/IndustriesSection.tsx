@@ -3,6 +3,7 @@ import { INDUSTRIES_DATA } from '../data/contentData';
 import { ChevronRight } from 'lucide-react';
 import { AnimatedImage } from './AnimatedImage';
 import { motion } from 'motion/react';
+import { getPathForIndustry } from '../utils/routes';
 
 interface IndustriesSectionProps {
   onBookClick: () => void;
@@ -41,10 +42,17 @@ export const IndustriesSection: React.FC<IndustriesSectionProps> = ({ onBookClic
         {/* 10 Industry Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {INDUSTRIES_DATA.map((ind, index) => (
-            <motion.div
+            <motion.a
               key={ind.id}
               id={`industry-card-${ind.id}`}
-              onClick={() => handleIndustryClick(ind.id)}
+              href={getPathForIndustry(ind.id)}
+              onClick={(e) => {
+                // If standard click without modifier keys (cmd/ctrl), use client-side navigation
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                  e.preventDefault();
+                  handleIndustryClick(ind.id);
+                }
+              }}
               initial={{ opacity: 0, y: 24, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.1 }}
@@ -53,7 +61,7 @@ export const IndustriesSection: React.FC<IndustriesSectionProps> = ({ onBookClic
                 delay: (index % 4) * 0.08,
                 ease: [0.21, 0.47, 0.32, 0.98],
               }}
-              className="group bg-white/95 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-white hover:border-black flex flex-col cursor-pointer transform hover:-translate-y-1"
+              className="group bg-white/95 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-white hover:border-black flex flex-col cursor-pointer transform hover:-translate-y-1 text-left no-underline"
             >
               {/* Image thumbnail */}
               <div className="relative h-44 overflow-hidden bg-gray-100 border-b border-gray-100">
@@ -102,7 +110,7 @@ export const IndustriesSection: React.FC<IndustriesSectionProps> = ({ onBookClic
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </motion.a>
           ))}
         </div>
 

@@ -36,21 +36,21 @@ export const CuriousCallout: React.FC<CuriousCalloutProps> = ({ onBookClick }) =
           <div className="lg:col-span-6 bg-[#121212] text-white p-8 md:p-14 flex flex-col justify-center items-center text-center space-y-6">
             <div className="space-y-2">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#9ce2c7]">
-                Curious to Learn More?
+                Ready to Automate Your Marketing?
               </p>
               <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-                Book Your <span className="text-[#9ce2c7]">Free Call Today</span>
+                Book Your <span className="text-[#9ce2c7]">Free Automation Call</span>
               </h3>
             </div>
 
             <div className="bg-[#1a1a1a] border border-white/10 p-6 rounded-2xl w-full max-w-sm space-y-4">
               <h4 className="text-xl font-bold text-white">
-                Free Strategy Call
+                Free AI & Growth Strategy Call
               </h4>
 
               <div className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#9ce2c7]">
                 <Clock className="w-4 h-4 text-[#9ce2c7]" />
-                <span>1 Hour • Complimentary</span>
+                <span>1 Hour • Custom Automation Blueprint</span>
               </div>
 
               <button

@@ -20,26 +20,26 @@ export const AboutSection: React.FC = () => {
             </h2>
 
             <p className="text-gray-300 text-base sm:text-lg leading-relaxed font-sans">
-              Deon Howard PPC offers end-to-end digital marketing services including website design, paid search, and social advertising for growth-minded businesses. I specialize in creating conversion-focused websites and paid advertising campaigns on Google and Meta that deliver consistent leads, sales, and ROI.
+              I specialize in architecting custom marketing automation systems powered by AI for growth-minded businesses. By combining machine learning advertising engines on Google and Meta with connected lead nurture workflows and conversion funnels, I help companies generate more customers and sales while saving founders and marketing teams hours of manual effort.
             </p>
 
             <p className="text-gray-300 text-base sm:text-lg leading-relaxed font-sans">
-              With over 8+ years of experience managing over $200M in ad spend, Deon is dedicated to collaborating closely with businesses of all sizes—from startups to established enterprises—to develop customized solutions that drive scalable growth. By prioritizing data integrity and performance innovation, he ensures clients stay ahead in the competitive digital landscape.
+              With over 8+ years of experience managing more than $200M in ad spend, I partner directly with business owners to replace disconnected, time-consuming manual tactics with systematic, high-ROI marketing automation systems that deliver consistent, predictable business results on autopilot.
             </p>
 
             {/* Quick Stats Badges */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 pt-6 border-t border-white/10">
               <div>
                 <p className="text-3xl sm:text-4xl font-extrabold text-[#9ce2c7]">8+ Years</p>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">PPC Experience</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">Growth & Ad Expertise</p>
               </div>
               <div>
                 <p className="text-3xl sm:text-4xl font-extrabold text-[#9ce2c7]">$200M+</p>
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">Ad Spend Managed</p>
               </div>
               <div>
-                <p className="text-3xl sm:text-4xl font-extrabold text-[#9ce2c7]">Predictable</p>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">ROAS & Growth</p>
+                <p className="text-3xl sm:text-4xl font-extrabold text-[#9ce2c7]">20+ Hrs</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mt-1">Saved / Wk with AI</p>
               </div>
             </div>
           </div>

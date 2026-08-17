@@ -1,18 +1,18 @@
 import React from 'react';
 import { BENEFITS_DATA } from '../data/contentData';
-import { Maximize2, RotateCw, UserCheck } from 'lucide-react';
+import { Clock, UserCheck, TrendingUp, Sparkles } from 'lucide-react';
 
 export const BenefitsSection: React.FC = () => {
   const getIcon = (iconName: string) => {
     switch (iconName) {
-      case 'Maximize2':
-        return <Maximize2 className="w-8 h-8 text-black" />;
-      case 'RotateCw':
-        return <RotateCw className="w-8 h-8 text-black" />;
+      case 'Clock':
+        return <Clock className="w-8 h-8 text-black" />;
       case 'UserCheck':
         return <UserCheck className="w-8 h-8 text-black" />;
+      case 'TrendingUp':
+        return <TrendingUp className="w-8 h-8 text-black" />;
       default:
-        return <Maximize2 className="w-8 h-8 text-black" />;
+        return <Sparkles className="w-8 h-8 text-black" />;
     }
   };
 
@@ -25,8 +25,11 @@ export const BenefitsSection: React.FC = () => {
             03 / Key Advantages
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#131d17]">
-            Benefits of <span className="text-black">Digital Marketing</span>
+            Benefits of <span className="text-black">Marketing Automation Systems</span>
           </h2>
+          <p className="text-sm sm:text-base text-[#1a2e24] max-w-2xl mx-auto font-sans">
+            How intelligent, connected systems powered by AI help you save time, capture more customers, and scale revenue predictably.
+          </p>
         </div>
 
         {/* 3 Columns Grid */}

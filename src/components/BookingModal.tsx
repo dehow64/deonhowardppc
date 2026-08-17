@@ -54,11 +54,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
             <CalendarIcon className="w-5 h-5 text-black" />
           </div>
           <h3 className="text-2xl font-bold text-[#131d17]">
-            Schedule Free Strategy Call
+            Schedule Free Automation Strategy Call
           </h3>
           <p className="text-xs font-bold uppercase tracking-widest text-black flex items-center justify-center space-x-1">
             <Clock className="w-3.5 h-3.5 text-black" />
-            <span>1 Hour • Confidential Consultation</span>
+            <span>1 Hour • Custom AI & Automation Blueprint</span>
           </p>
         </div>
 

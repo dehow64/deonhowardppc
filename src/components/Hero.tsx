@@ -43,15 +43,15 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
           <div className="lg:col-span-6 space-y-6">
             <div className="inline-flex items-center space-x-2 bg-[#9ce2c7]/10 border border-[#9ce2c7]/30 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#9ce2c7]">
               <span className="w-2 h-2 rounded-full bg-[#9ce2c7] animate-pulse"></span>
-              <span>Accepting New PPC & Growth Clients</span>
+              <span>AI-Powered Marketing Automation Systems</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
-              Data-Driven PPC & Digital Marketing That <span className="text-[#9ce2c7]">Scale Revenue</span>
+              Marketing Automation Systems That <span className="text-[#9ce2c7]">Save Time & Scale Sales</span>
             </h1>
 
             <p className="text-gray-300 text-base sm:text-lg leading-relaxed max-w-xl font-sans">
-              Translate your business goals into high-impact Google, Meta, and website campaigns that deliver measurable ROI and predictable growth.
+              I build custom marketing automation systems powered by AI—engineered to eliminate manual busywork, connect your customer journey, and deliver predictable results, whether that's winning more customers or multiplying sales at scale.
             </p>
 
             <div className="pt-2 flex flex-wrap gap-4 items-center">
@@ -60,7 +60,7 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
                 onClick={onBookClick}
                 className="bg-black hover:bg-gray-900 text-white font-bold text-sm px-8 py-4 rounded-full transition-all duration-200 shadow-lg flex items-center space-x-2 cursor-pointer border border-white/20 transform hover:-translate-y-0.5"
               >
-                <span>Book Free Strategy Call</span>
+                <span>Book Free Automation Strategy Call</span>
                 <ChevronRight className="w-4 h-4 text-[#9ce2c7]" />
               </button>
 
@@ -69,7 +69,7 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
                 id="hero-explore-services-btn"
                 className="text-white hover:text-[#9ce2c7] border border-white/20 hover:border-[#9ce2c7] px-6 py-4 rounded-full text-xs font-bold uppercase tracking-widest transition-colors"
               >
-                Explore Services
+                Explore Systems
               </a>
             </div>
           </div>
@@ -80,11 +80,11 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
               
               <div className="text-center pb-5 border-b border-[#131d17]/15">
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#131d17]">
-                  Free Strategy Call
+                  Free Automation Call
                 </h2>
                 <div className="mt-2 flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-black">
                   <Clock className="w-4 h-4 text-black" />
-                  <span>1 hr • Free Strategy Session</span>
+                  <span>1 hr • Custom AI & Automation Blueprint</span>
                 </div>
               </div>
 

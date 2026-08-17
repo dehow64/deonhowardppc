@@ -13,7 +13,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
     email: '',
     phone: '',
     companyName: '',
-    service: 'Paid Search (Google Ads)',
+    service: 'Automated Conversion Funnels & Websites',
     budget: '$5,000 - $10,000/mo',
     message: ''
   });
@@ -66,11 +66,11 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#131d17] leading-tight">
-            Ready to Grow Your Business with <span className="text-black">Predictable Results?</span>
+            Ready to Build Your <span className="text-black">Marketing Automation System?</span>
           </h2>
 
           <p className="text-base sm:text-lg text-[#1a2e24] max-w-2xl mx-auto leading-relaxed font-sans">
-            It's time to stop guessing and start getting the customers you want. Book a free, no-obligation strategy call today to discuss your business goals and see how a focused PPC strategy can get you there.
+            Stop wasting hours on manual marketing busywork or disconnected campaigns. Book a free 1-on-1 strategy call today to discover how a custom marketing automation system can scale your leads and sales predictably.
           </p>
         </div>
 
@@ -169,7 +169,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#131d17] mb-2">
-                  What Services Are You Interested In?
+                  What Solutions Are You Interested In?
                 </label>
                 <select
                   name="service"
@@ -177,17 +177,17 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   onChange={handleChange}
                   className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 transition-all cursor-pointer outline-none"
                 >
-                  <option value="Paid Search (Google Ads)">Paid Search (Google Ads)</option>
-                  <option value="Paid Social (Meta / TikTok)">Paid Social (Meta / TikTok)</option>
-                  <option value="Website Design & Landing Pages">Website Design & Landing Pages</option>
-                  <option value="Conversion Tracking & Analytics">Conversion Tracking & Analytics</option>
-                  <option value="Full Digital Marketing Package">Full Digital Marketing Package</option>
+                  <option value="Automated Conversion Funnels & Websites">Automated Conversion Funnels & Websites</option>
+                  <option value="AI Customer Acquisition Systems">AI Customer Acquisition Systems</option>
+                  <option value="AI Marketing Automation Tools">AI Marketing Automation Tools</option>
+                  <option value="Predictive Attribution Systems">Predictive Attribution Systems</option>
+                  <option value="Full End-to-End Marketing Automation System">Full End-to-End Marketing Automation System</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#131d17] mb-2">
-                  What Is Your Advertising Budget?
+                  What Is Your Monthly Growth Budget?
                 </label>
                 <select
                   name="budget"
@@ -206,12 +206,12 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
             {/* Project Description */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-[#131d17] mb-2">
-                Please describe your project below
+                Please describe your goals & current bottlenecks
               </label>
               <textarea
                 name="message"
                 rows={4}
-                placeholder="Tell us about your target audience, current monthly ad spend, and top business goals..."
+                placeholder="Tell us about your current customer acquisition flow, manual time bottlenecks, and target revenue growth..."
                 value={formData.message}
                 onChange={handleChange}
                 className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 placeholder-gray-400 transition-all resize-none font-sans outline-none"

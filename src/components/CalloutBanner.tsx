@@ -34,10 +34,10 @@ export const CalloutBanner: React.FC = () => {
             Immediate Action
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Get Your Custom <span className="text-[#9ce2c7]">Growth Strategy</span>
+            Get Your Custom <span className="text-[#9ce2c7]">Automation System Roadmap</span>
           </h2>
           <p className="text-xl sm:text-2xl font-semibold text-gray-300">
-            Secure Your Free Strategy Consultation Today
+            Discover How Marketing Automation Systems Can Save Time & Multiply Customers
           </p>
         </div>
 

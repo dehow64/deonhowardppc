@@ -1,8 +1,13 @@
 import React from 'react';
-import { PHONE_NUMBER, EMAIL_ADDRESS } from '../data/contentData';
-import { Phone, Mail, ArrowUp } from 'lucide-react';
+import { PHONE_NUMBER, EMAIL_ADDRESS, INDUSTRIES_DATA } from '../data/contentData';
+import { Phone, Mail, ArrowUp, ChevronRight } from 'lucide-react';
+import { getPathForIndustry } from '../utils/routes';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onSelectIndustry?: (industryId: string) => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onSelectIndustry }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -36,7 +41,7 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-white/10">
           
           {/* Left Column: Brand & Direct Contacts */}
-          <div className="md:col-span-7 space-y-6">
+          <div className="md:col-span-5 space-y-6">
             <div>
               <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#9ce2c7] mb-1">
                 Digital Growth Advisory
@@ -71,7 +76,7 @@ export const Footer: React.FC = () => {
             </div>
 
             {/* Legal Links */}
-            <div className="pt-4 flex flex-col space-y-2">
+            <div className="pt-2 flex flex-col space-y-2">
               {legalLinks.map((link) => (
                 <a
                   key={link.label}
@@ -85,9 +90,36 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
+          {/* Middle Column: Industries Served */}
+          <div className="md:col-span-4 space-y-3">
+            <div className="text-xs font-bold uppercase tracking-widest text-[#9ce2c7]">
+              Specialized Industries
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+              {INDUSTRIES_DATA.slice(0, 8).map((ind) => (
+                <a
+                  key={ind.id}
+                  href={getPathForIndustry(ind.id)}
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0 && onSelectIndustry) {
+                      e.preventDefault();
+                      onSelectIndustry(ind.id);
+                    }
+                  }}
+                  className="text-xs text-gray-400 hover:text-[#9ce2c7] transition-colors py-1 flex items-center space-x-1"
+                >
+                  <span className="truncate">{ind.title}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+
           {/* Right Column: Main Navigation Links */}
-          <div className="md:col-span-5 flex flex-col justify-between">
+          <div className="md:col-span-3 flex flex-col justify-between">
             <nav className="flex flex-col space-y-3">
+              <div className="text-xs font-bold uppercase tracking-widest text-[#9ce2c7]">
+                Quick Links
+              </div>
               {navLinks.map((link) => (
                 <a
                   key={link.label}

@@ -24,12 +24,37 @@ import { SuccessModal } from './components/SuccessModal';
 import { RealEstateLandingPage } from './components/RealEstateLandingPage';
 import { IndustryLandingPage } from './components/IndustryLandingPage';
 import { CaseStudy, ContactFormData } from './types';
+import { getIndustryFromPath, getPathForIndustry, getPageTitle } from './utils/routes';
 
 export default function App() {
-  const [activeIndustryView, setActiveIndustryView] = useState<string | null>(null);
+  const [activeIndustryView, setActiveIndustryView] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return getIndustryFromPath(window.location.pathname, window.location.hash);
+    }
+    return null;
+  });
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
   const [submissionSuccessData, setSubmissionSuccessData] = useState<ContactFormData | null>(null);
+
+  // Sync state with browser URL on load and on back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const matched = getIndustryFromPath(window.location.pathname, window.location.hash);
+      setActiveIndustryView(matched);
+      document.title = getPageTitle(matched);
+    };
+
+    // Set initial title and route if needed
+    const initialMatched = getIndustryFromPath(window.location.pathname, window.location.hash);
+    if (initialMatched !== activeIndustryView) {
+      setActiveIndustryView(initialMatched);
+    }
+    document.title = getPageTitle(initialMatched);
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const handleBookClick = () => {
     setBookingModalOpen(true);
@@ -37,11 +62,16 @@ export default function App() {
 
   const handleSelectIndustry = (industryId: string) => {
     setActiveIndustryView(industryId);
+    const targetUrl = getPathForIndustry(industryId);
+    window.history.pushState({ industryId }, '', targetUrl);
+    document.title = getPageTitle(industryId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNavToMain = () => {
     setActiveIndustryView(null);
+    window.history.pushState(null, '', '/');
+    document.title = getPageTitle(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -84,10 +114,7 @@ export default function App() {
           {/* Header Bar */}
           <Header 
             onBookClick={handleBookClick} 
-            onRealEstateClick={() => {
-              setActiveIndustryView('real-estate');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }} 
+            onRealEstateClick={() => handleSelectIndustry('real-estate')} 
           />
 
           {/* Main Content Sections matching Wix layout and video walkthrough */}
@@ -133,7 +160,7 @@ export default function App() {
           </main>
 
           {/* Footer */}
-          <Footer />
+          <Footer onSelectIndustry={handleSelectIndustry} />
         </>
       )}
 

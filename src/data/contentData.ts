@@ -17,22 +17,22 @@ export const CALLOUT_PHONE_IMG = "https://images.unsplash.com/photo-1560250097-0
 
 export const BENEFITS_DATA = [
   {
-    id: 'scalability',
-    title: 'Unmatched Scalability',
-    icon: 'Maximize2',
-    description: 'Tap into new markets and promote new services instantly. Grow your business on your terms, whenever you\'re ready'
+    id: 'time-savings',
+    title: 'Hours of Time Saved',
+    icon: 'Clock',
+    description: 'Eliminate repetitive marketing busywork. Intelligent AI marketing automation systems handle lead capture, follow-ups, and campaign optimization 24/7 so you can focus on running your business.'
   },
   {
-    id: 'control',
-    title: 'Complete Control',
-    icon: 'RotateCw',
-    description: 'You have the power to turn on more business when you need it. Generate more customers on-demand, all with a budget you control.'
-  },
-  {
-    id: 'attraction',
-    title: 'VIP Client Attraction',
+    id: 'customer-growth',
+    title: 'Predictable Customer Flow',
     icon: 'UserCheck',
-    description: 'Stop chasing and start attracting. My campaigns are designed to put your business in front of the exact customers you want to work with.'
+    description: 'Turn cold traffic into booked consultations and buying customers with automated nurturing funnels and connected systems that engage prospects at the exact right moment.'
+  },
+  {
+    id: 'scalable-sales',
+    title: 'Automated Sales & Revenue',
+    icon: 'TrendingUp',
+    description: 'Scale ad spend and revenue with self-optimizing AI models. Get more qualified clients and repeat buyers with a system you control with precision.'
   }
 ];
 
@@ -41,25 +41,25 @@ export const OBJECTIVES_DATA = [
     id: 'lead-gen',
     title: 'Lead Generation',
     icon: 'Users',
-    description: 'Book more clients through form fills and phone calls'
+    description: 'Capture and qualify high-intent prospects with AI-optimized landing pages, smart ad targeting, and instant automated follow-up sequences that book consultations on your calendar.'
   },
   {
     id: 'ecomm',
-    title: 'E-Commerce + Sales',
+    title: 'E-Commerce & Online Sales',
     icon: 'CreditCard',
-    description: 'Drive sales and revenue through your online store'
+    description: 'Accelerate checkout volume and average order value with automated Google & Meta shopping ads, predictive retargeting, and dynamic product landing pages.'
   },
   {
-    id: 'awareness',
+    id: 'brand-awareness',
     title: 'Brand Awareness',
     icon: 'Globe',
-    description: 'Increase your SOV online to stand out from your competition'
+    description: 'Expand market reach and stay top-of-mind with AI-driven cross-channel ad distribution, automated creative rotations, and hyper-targeted audience modeling.'
   },
   {
     id: 'subscriptions',
     title: 'Subscriptions',
     icon: 'Repeat',
-    description: 'Attract new subscribers and drive up sales for your best services'
+    description: 'Maximize recurring revenue and customer lifetime value using automated trial-to-paid nurture workflows, churn-prevention triggers, and AI win-back sequences.'
   }
 ];
 
@@ -128,67 +128,69 @@ export const INDUSTRIES_DATA: IndustryItem[] = [
 
 export const SERVICES_DATA: ServiceItem[] = [
   {
-    id: 'website-design',
-    title: 'Website Design',
-    tagline: 'Crafting User-Centric Websites & Landing Pages',
+    id: 'automated-funnels',
+    title: 'Automated Conversion Funnels',
+    tagline: 'AI-Powered Websites & High-Converting Landing Pages',
+    platforms: ['AI-Powered Websites', 'High-Converting Landing Pages', 'Mobile-Ready & On-Brand', 'Full Tech Stack Integration'],
     iconName: 'Layout',
-    description: 'Turn your website into a conversion magnet. Get a website that\'s focused on creating user-centric experience that drives meaningful interactions while maintaining your unique identity, while fully integrating with your advertising campaigns.'
+    description: 'Receive custom, AI-powered websites and high-converting landing pages engineered to be sleek, professional, on-brand, and fully mobile-friendly. Every page is built for maximum speed and conversion, seamlessly integrated with your CRM, calendar booking, and other marketing channels.'
   },
   {
-    id: 'paid-search',
-    title: 'Paid Search',
-    tagline: 'Maximizing Ad Performance',
-    platforms: ['Google Ads', 'Microsoft Ads'],
-    iconName: 'Search',
-    description: 'Get paid search campaigns that leverage the best of Google\'s capabilities, leveraging the best practice set up and up to date AI capabilities to maximize results. Our data-driven approach ensures that your ad spend generates maximum ROI and leads to increased conversions.'
+    id: 'ai-customer-acquisition',
+    title: 'AI Customer Acquisition Systems',
+    tagline: 'High-ROI Paid Ads Across Google & Meta',
+    platforms: ['Google AI (Search & PMAX)', 'Meta Advantage+ (FB/IG)', 'AI Audience Modeling', 'Smart Bidding'],
+    iconName: 'TrendingUp',
+    description: 'Deploy intelligent ad campaigns powered by machine learning across Google, Meta, and beyond. We build targeted search, shopping, and social ads that pinpoint your ideal customers, optimize bids autonomously, and scale acquisition volume at the lowest cost per lead.'
   },
   {
-    id: 'paid-social',
-    title: 'Paid Social',
-    tagline: 'Drive Results on Social Media',
-    platforms: ['META (Facebook, Instagram)', 'TikTok'],
-    iconName: 'Share2',
-    description: 'Forget Boosted Posts- get social campaigns that drive results. Get campaigns that resonates with your VIP clients across the top social platforms and meet all your business objectives, from brand awareness and remarketing to conversions, and sales.'
+    id: 'marketing-automation',
+    title: 'AI Marketing Automation Tools',
+    tagline: 'Intelligent Workflows, Agents & Multi-Channel Nurture',
+    platforms: ['AI Agents & Chatbots', 'CRM & Lead Workflows', 'Smart SMS & Email Nurture', 'Instant Qualification'],
+    iconName: 'Sparkles',
+    description: 'Automate manual follow-up and lead qualification with smart AI tools and connected workflows. From instantaneous SMS/email responses to 24/7 intelligent scheduling and CRM synchronization, your business engages prospects instantly without lifting a finger.'
   },
   {
-    id: 'conversion-analytics',
-    title: 'Conversion Tracking + Analytics',
-    tagline: 'Driving Consistent Results',
+    id: 'predictive-analytics',
+    title: 'Predictive Attribution Systems',
+    tagline: 'Advanced Analytics, Closed-Loop Tracking & Actionable Reporting',
+    platforms: ['Server-Side CAPI Tracking', 'Real-Time ROI Dashboards', 'Closed-Loop Revenue Attribution', 'Predictive Insights'],
     iconName: 'BarChart3',
-    description: 'Ensure your site is set up for success with conversion tracking. With advanced pixel integration, you\'ll ensure your tracking your most important business actions, and integrate seamlessly into your Google and Meta Ads platforms to drive tangible results.'
+    description: 'Gain absolute clarity on your marketing performance with advanced reporting and predictive revenue attribution. We implement privacy-compliant server-side tracking and custom dashboards that connect every dollar spent directly to booked appointments, closed sales, and true bottom-line ROI.'
   }
 ];
 
 export const PROCESS_STEPS: ProcessStep[] = [
   {
     number: 1,
-    title: '1. Strategy Session',
-    description: 'Every partnership starts with a deep-dive conversation about your core business objectives, growth targets, and revenue goals.'
+    title: '1. Growth & Automation Audit',
+    description: 'We analyze your current customer acquisition flow, manual marketing bottlenecks, and revenue targets to design a bespoke AI automation blueprint.'
   },
   {
     number: 2,
-    title: '2. Market Audit & VIP Client Identification',
-    description: 'A deep dive into your current market positioning, competitor analysis, geo-targeting options, and defining your ideal high-value VIP client profile.'
+    title: '2. Customer Journey & AI Model Mapping',
+    description: 'We define your ideal high-value customer profile, qualification criteria, and automated nurture sequences to eliminate repetitive manual outreach.'
   },
   {
     number: 3,
-    title: '3. Channel Selection',
-    description: 'Strategic selection of the precise advertising platforms—Google, Meta, LinkedIn, or programmatic—best suited to reach your target audience and hit ROI goals.'
+    title: '3. Multichannel AI Engine Architecture',
+    description: 'Strategic deployment of self-optimizing campaign infrastructure across Google, Meta, and automated channels engineered for maximum ROI.'
   },
   {
     number: 4,
-    title: '4. Conversion Tracking Setup',
-    description: 'Implementation and validation of advanced tracking pixels, server-side conversion APIs, and event analytics to measure every key business action.'
+    title: '4. Automation & Conversion Tracking Integration',
+    description: 'Implementation of server-side conversion tracking, CRM synchronization, and instant lead alerting workflows for seamless operational execution.'
   },
   {
     number: 5,
-    title: '5. Campaign Launch & Optimization',
-    description: 'Deploying high-converting ad creatives and landing pages, paired with active daily bidding, audience testing, and budget optimization.'
+    title: '5. Autonomous Campaign Launch & Optimization',
+    description: 'Deploying dynamic AI-assisted creative testing, algorithmic bidding, and automated budget reallocation to scale customer acquisition on autopilot.'
   },
   {
     number: 6,
-    title: '6. Analytics & Reporting',
-    description: 'Delivering transparent, executive-level performance dashboards with actionable insights, ROI tracking, and continuous scaling recommendations.'
+    title: '6. AI Revenue Intelligence & Scaling',
+    description: 'Delivering real-time revenue analytics dashboards and automated performance insights to continuously multiply sales while preserving your time.'
   }
 ];
 

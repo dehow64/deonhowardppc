@@ -14,14 +14,14 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
 
   const navLinks = [
     { label: 'Home', href: '#home', num: '01' },
-    { label: 'The Challenge', href: '#struggling', num: '02' },
+    { label: 'The Growth Dilemma', href: '#struggling', num: '02' },
     { label: 'About Deon', href: '#about', num: '03' },
     { label: 'Key Benefits', href: '#benefits', num: '04' },
     { label: 'Business Objectives', href: '#objectives', num: '05' },
     { label: 'Industries Supported', href: '#industries', num: '06' },
-    { label: 'Real Estate Focus', href: '#real-estate', num: '07', isSpecial: true },
-    { label: 'Services & Platforms', href: '#services', num: '08' },
-    { label: '6-Step Process', href: '#process', num: '09' },
+    { label: 'Real Estate Focus', href: '/real-estate', num: '07', isSpecial: true },
+    { label: 'Services & Systems', href: '#services', num: '08' },
+    { label: '6-Step Framework', href: '#process', num: '09' },
     { label: 'Case Studies', href: '#case-studies', num: '10' },
     { label: 'Contact & Booking', href: '#contact', num: '11' },
   ];

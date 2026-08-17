@@ -14,11 +14,11 @@ export const ProcessSection: React.FC = () => {
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#131d17]">
-            A Proven Process for <span className="text-black">Predictable Growth</span>
+            A Proven Framework for <span className="text-black">Automated Growth</span>
           </h2>
 
           <p className="text-base sm:text-lg leading-relaxed text-[#1a2e24] max-w-2xl mx-auto font-sans">
-            I don't just run ads; I build a comprehensive strategy designed to achieve your business goals. My end-to-end, conversion-based approach ensures your ad spend is a profitable investment.
+            I don't just launch campaigns; I engineer automated AI marketing systems designed to save you time and drive sustainable results, whether that's booked customer appointments or accelerated online sales.
           </p>
         </div>
 
