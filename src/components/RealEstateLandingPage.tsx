@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 import { PHONE_NUMBER } from '../data/contentData';
 import { IndustrySubNav } from './IndustrySubNav';
-import { GoogleConnectBar } from './GoogleConnectBar';
+import { submitToGoogleScript } from '../services/googleScript';
 import { scheduleGoogleWorkspaceAppointment } from '../services/googleWorkspace';
 import { ContactFormData } from '../types';
 
@@ -92,14 +92,40 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
 
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim() || 'Real Estate Client';
+    const selectedDateStr = `${currentMonth.split(' ')[0]} ${selectedDay}, ${currentMonth.split(' ')[1]}`;
+    const serviceName = `Real Estate Client Acquisition (${formData.propertyType})`;
+
+    const fullMessage = [
+      formData.message ? `Notes: ${formData.message}` : '',
+      `Phone: ${formData.phone || 'Not provided'}`,
+      `Company/Brokerage: ${formData.companyName || 'Not provided'}`,
+      `Property Focus: ${formData.propertyType}`,
+      `Budget: ${formData.budget}`,
+      `Scheduled Appointment: ${selectedDateStr} at ${selectedSlot}`
+    ].filter(Boolean).join('\n');
+
     const submissionPayload: ContactFormData = {
       ...formData,
-      service: `Real Estate Client Acquisition (${formData.propertyType})`,
-      selectedDate: `${currentMonth.split(' ')[0]} ${selectedDay}, ${currentMonth.split(' ')[1]}`,
+      service: serviceName,
+      selectedDate: selectedDateStr,
       selectedTimeSlot: selectedSlot
     };
 
     try {
+      // POST to Google Apps Script Webhook
+      await submitToGoogleScript({
+        name: fullName,
+        email: formData.email,
+        message: fullMessage,
+        phone: formData.phone,
+        company: formData.companyName,
+        service: serviceName,
+        budget: formData.budget,
+        date: selectedDateStr,
+        timeSlot: selectedSlot
+      });
+
       const wsResult = await scheduleGoogleWorkspaceAppointment(submissionPayload);
       submissionPayload.workspaceStatus = wsResult;
     } catch (err) {

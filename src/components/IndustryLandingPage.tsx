@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { PHONE_NUMBER } from '../data/contentData';
 import { IndustrySubNav } from './IndustrySubNav';
-import { GoogleConnectBar } from './GoogleConnectBar';
+import { submitToGoogleScript } from '../services/googleScript';
 import { scheduleGoogleWorkspaceAppointment } from '../services/googleWorkspace';
 import { ContactFormData } from '../types';
 
@@ -938,14 +938,40 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
 
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim() || `${config.title} Client`;
+    const selectedDateStr = `${currentMonth.split(' ')[0]} ${selectedDay}, ${currentMonth.split(' ')[1]}`;
+    const serviceName = `Industry Acquisition Engine (${config.title})`;
+
+    const fullMessage = [
+      formData.message ? `Notes: ${formData.message}` : '',
+      `Phone: ${formData.phone || 'Not provided'}`,
+      `Company: ${formData.companyName || 'Not provided'}`,
+      `Industry/Vertical: ${config.title}`,
+      `Budget: ${formData.budget}`,
+      `Scheduled Appointment: ${selectedDateStr} at ${selectedSlot}`
+    ].filter(Boolean).join('\n');
+
     const submissionPayload: ContactFormData = {
       ...formData,
-      service: `Industry Acquisition Engine (${config.title})`,
-      selectedDate: `${currentMonth.split(' ')[0]} ${selectedDay}, ${currentMonth.split(' ')[1]}`,
+      service: serviceName,
+      selectedDate: selectedDateStr,
       selectedTimeSlot: selectedSlot
     };
 
     try {
+      // POST to Google Apps Script Webhook
+      await submitToGoogleScript({
+        name: fullName,
+        email: formData.email,
+        message: fullMessage,
+        phone: formData.phone,
+        company: formData.companyName,
+        service: serviceName,
+        budget: formData.budget,
+        date: selectedDateStr,
+        timeSlot: selectedSlot
+      });
+
       const wsResult = await scheduleGoogleWorkspaceAppointment(submissionPayload);
       submissionPayload.workspaceStatus = wsResult;
     } catch (err) {

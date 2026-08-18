@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Calendar as CalendarIcon, Clock, Check, Loader2, Send } from 'lucide-react';
+import { submitToGoogleScript } from '../services/googleScript';
 import { scheduleGoogleWorkspaceAppointment, TARGET_ADMIN_EMAIL } from '../services/googleWorkspace';
 import { ContactFormData } from '../types';
 
@@ -35,6 +36,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
     const nameParts = name.trim().split(' ');
     const firstName = nameParts[0] || 'Client';
     const lastName = nameParts.slice(1).join(' ') || '';
+    const fullName = name.trim() || 'Client';
+    const selectedDateStr = `August ${selectedDay}, 2026`;
+
+    const fullMessage = [
+      `Quick Booking Modal Submission`,
+      `Phone: ${phone || 'Not provided'}`,
+      `Company: ${company || 'Not provided'}`,
+      `Scheduled Appointment: ${selectedDateStr} at ${selectedSlot}`
+    ].join('\n');
 
     const submissionData: ContactFormData = {
       firstName,
@@ -44,12 +54,25 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
       companyName: company || 'Growth Partner',
       service: 'Custom Marketing Automation System',
       budget: '$5,000 - $10,000/mo',
-      message: 'Strategy Consultation booked via interactive booking modal.',
-      selectedDate: `August ${selectedDay}, 2026`,
+      message: fullMessage,
+      selectedDate: selectedDateStr,
       selectedTimeSlot: selectedSlot
     };
 
     try {
+      // POST to Google Apps Script Webhook
+      await submitToGoogleScript({
+        name: fullName,
+        email: email,
+        message: fullMessage,
+        phone: phone,
+        company: company,
+        service: 'Custom Marketing Automation System',
+        budget: '$5,000 - $10,000/mo',
+        date: selectedDateStr,
+        timeSlot: selectedSlot
+      });
+
       const workspaceResult = await scheduleGoogleWorkspaceAppointment(submissionData);
       submissionData.workspaceStatus = workspaceResult;
     } catch (err) {

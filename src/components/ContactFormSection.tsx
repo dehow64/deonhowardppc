@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Check, Calendar as CalendarIcon, Loader2, Send } from 'lucide-react';
 import { ContactFormData } from '../types';
-import { GoogleConnectBar } from './GoogleConnectBar';
+import { submitToGoogleScript } from '../services/googleScript';
 import { scheduleGoogleWorkspaceAppointment, TARGET_ADMIN_EMAIL } from '../services/googleWorkspace';
 
 interface ContactFormSectionProps {
@@ -51,23 +51,52 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // 1. Prevent default form submission behavior
     e.preventDefault();
+    // 2. Disable submit button to prevent duplicate clicks
     setIsSubmitting(true);
+
+    const fullName = `${formData.firstName} ${formData.lastName}`.trim() || 'Prospective Client';
+    const selectedDateStr = `${currentMonth.split(' ')[0]} ${selectedDay}, ${currentMonth.split(' ')[1]}`;
+
+    // Construct enriched message with consultation details
+    const fullMessage = [
+      formData.message ? `Notes: ${formData.message}` : '',
+      `Phone: ${formData.phone || 'Not provided'}`,
+      `Company: ${formData.companyName || 'Not provided'}`,
+      `Service: ${formData.service}`,
+      `Budget: ${formData.budget}`,
+      `Scheduled Appointment: ${selectedDateStr} at ${selectedSlot}`
+    ].filter(Boolean).join('\n');
 
     const submissionPayload: ContactFormData = {
       ...formData,
-      selectedDate: `${currentMonth.split(' ')[0]} ${selectedDay}, ${currentMonth.split(' ')[1]}`,
+      selectedDate: selectedDateStr,
       selectedTimeSlot: selectedSlot
     };
 
     try {
-      // Execute Google Workspace integration (Calendar & Gmail) and Server Logging
+      // 3. Send POST request using fetch() with mode: 'no-cors' and JSON stringified body
+      await submitToGoogleScript({
+        name: fullName,
+        email: formData.email,
+        message: fullMessage,
+        phone: formData.phone,
+        company: formData.companyName,
+        service: formData.service,
+        budget: formData.budget,
+        date: selectedDateStr,
+        timeSlot: selectedSlot
+      });
+
+      // 4. Also perform server appointment logging and workspace calendar integration
       const workspaceResult = await scheduleGoogleWorkspaceAppointment(submissionPayload);
       submissionPayload.workspaceStatus = workspaceResult;
     } catch (err) {
-      console.error('Error during workspace appointment scheduling:', err);
+      console.error('Error during form submission processing:', err);
     } finally {
       setIsSubmitting(false);
+      // 5. Automatically redirect the user to the existing thank you page
       onFormSubmitted(submissionPayload);
     }
   };
