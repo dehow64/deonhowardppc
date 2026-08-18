@@ -204,12 +204,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin text-[#9ce2c7]" />
-                <span>Scheduling on Google Calendar...</span>
+                <span>Booking Appointment & Syncing Calendar...</span>
               </>
             ) : (
               <>
                 <Send className="w-4 h-4 text-[#9ce2c7]" />
-                <span>Confirm & Schedule on Google Calendar</span>
+                <span>Confirm & Book Strategy Session</span>
               </>
             )}
           </button>

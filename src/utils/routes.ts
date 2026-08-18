@@ -128,7 +128,37 @@ export const getPathForIndustry = (industryId: string): string => {
   return route ? `/${route.slug}` : `/${industryId}`;
 };
 
-export const getPageTitle = (industryId: string | null): string => {
+export const isThankYouPage = (pathname: string = window.location.pathname, hash: string = window.location.hash): boolean => {
+  if (typeof window === 'undefined') return false;
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const pParam = searchParams.get('p') || searchParams.get('path') || searchParams.get('page');
+  if (pParam) {
+    const clean = pParam.toLowerCase().replace(/^\/+|\/+$/g, '');
+    if (['thank-you', 'thankyou', 'thanks', 'confirmation'].includes(clean)) {
+      return true;
+    }
+  }
+
+  const cleanPath = pathname.toLowerCase().replace(/^\/+|\/+$/g, '');
+  if (['thank-you', 'thankyou', 'thanks', 'confirmation'].includes(cleanPath)) {
+    return true;
+  }
+
+  if (hash) {
+    const cleanHash = hash.replace(/^#\/?/, '').toLowerCase().replace(/^\/+|\/+$/g, '');
+    if (['thank-you', 'thankyou', 'thanks', 'confirmation'].includes(cleanHash)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const getPageTitle = (industryId: string | null, isThanks: boolean = false): string => {
+  if (isThanks) {
+    return 'Thank You - Strategy Session Confirmed | Deon Howard PPC';
+  }
   if (!industryId) {
     return 'Deon Howard PPC - Digital Marketing & Growth Agency';
   }

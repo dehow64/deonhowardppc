@@ -20,11 +20,11 @@ import { ContactFormSection } from './components/ContactFormSection';
 import { Footer } from './components/Footer';
 import { BookingModal } from './components/BookingModal';
 import { CaseStudyModal } from './components/CaseStudyModal';
-import { SuccessModal } from './components/SuccessModal';
+import { ThankYouPage } from './components/ThankYouPage';
 import { RealEstateLandingPage } from './components/RealEstateLandingPage';
 import { IndustryLandingPage } from './components/IndustryLandingPage';
 import { CaseStudy, ContactFormData } from './types';
-import { getIndustryFromPath, getPathForIndustry, getPageTitle } from './utils/routes';
+import { getIndustryFromPath, getPathForIndustry, getPageTitle, isThankYouPage } from './utils/routes';
 
 export default function App() {
   const [activeIndustryView, setActiveIndustryView] = useState<string | null>(() => {
@@ -33,6 +33,12 @@ export default function App() {
     }
     return null;
   });
+  const [isThankYouView, setIsThankYouView] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return isThankYouPage(window.location.pathname, window.location.hash);
+    }
+    return false;
+  });
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
   const [submissionSuccessData, setSubmissionSuccessData] = useState<ContactFormData | null>(null);
@@ -40,17 +46,25 @@ export default function App() {
   // Sync state with browser URL on load and on back/forward buttons
   useEffect(() => {
     const handlePopState = () => {
+      const isThanks = isThankYouPage(window.location.pathname, window.location.hash);
+      setIsThankYouView(isThanks);
+
       const matched = getIndustryFromPath(window.location.pathname, window.location.hash);
       setActiveIndustryView(matched);
-      document.title = getPageTitle(matched);
+      document.title = getPageTitle(matched, isThanks);
     };
 
     // Set initial title and route if needed
+    const initialIsThanks = isThankYouPage(window.location.pathname, window.location.hash);
     const initialMatched = getIndustryFromPath(window.location.pathname, window.location.hash);
+    
+    if (initialIsThanks !== isThankYouView) {
+      setIsThankYouView(initialIsThanks);
+    }
     if (initialMatched !== activeIndustryView) {
       setActiveIndustryView(initialMatched);
     }
-    document.title = getPageTitle(initialMatched);
+    document.title = getPageTitle(initialMatched, initialIsThanks);
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -61,31 +75,54 @@ export default function App() {
   };
 
   const handleSelectIndustry = (industryId: string) => {
+    setIsThankYouView(false);
     setActiveIndustryView(industryId);
     const targetUrl = getPathForIndustry(industryId);
     window.history.pushState({ industryId }, '', targetUrl);
-    document.title = getPageTitle(industryId);
+    document.title = getPageTitle(industryId, false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNavToMain = () => {
+    setIsThankYouView(false);
     setActiveIndustryView(null);
     window.history.pushState(null, '', '/');
-    document.title = getPageTitle(null);
+    document.title = getPageTitle(null, false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFormSubmitted = (data: ContactFormData) => {
     setSubmissionSuccessData(data);
+    setBookingModalOpen(false);
+    setIsThankYouView(true);
+    try {
+      window.history.pushState({ page: 'thank-you' }, '', '/thank-you');
+    } catch (e) {
+      // fallback
+    }
+    document.title = getPageTitle(null, true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleQuickBookSuccess = (data: ContactFormData) => {
-    setSubmissionSuccessData(data);
+    handleFormSubmitted(data);
   };
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#121212] font-sans selection:bg-blue-600 selection:text-white">
-      {activeIndustryView === 'real-estate' ? (
+      {isThankYouView ? (
+        <ThankYouPage
+          data={submissionSuccessData}
+          onBackToMain={handleNavToMain}
+          onBrowseCaseStudies={() => {
+            handleNavToMain();
+            setTimeout(() => {
+              const el = document.getElementById('case-studies');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }}
+        />
+      ) : activeIndustryView === 'real-estate' ? (
         <RealEstateLandingPage
           onBackToMain={handleNavToMain}
           onBookClick={handleBookClick}
@@ -166,11 +203,6 @@ export default function App() {
         study={selectedCaseStudy}
         onClose={() => setSelectedCaseStudy(null)}
         onBookClick={handleBookClick}
-      />
-
-      <SuccessModal
-        data={submissionSuccessData}
-        onClose={() => setSubmissionSuccessData(null)}
       />
     </div>
   );

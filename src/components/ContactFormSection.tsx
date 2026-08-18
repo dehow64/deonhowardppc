@@ -91,9 +91,6 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
           </p>
         </div>
 
-        {/* Google Workspace Account Connection Banner */}
-        <GoogleConnectBar />
-
         {/* Form Container Card */}
         <div className="bg-white/95 rounded-3xl p-6 sm:p-10 shadow-xl border border-white">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -362,12 +359,12 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin text-[#9ce2c7]" />
-                    <span>Scheduling & Syncing with Google Calendar...</span>
+                    <span>Booking Appointment & Syncing Calendar...</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4 text-[#9ce2c7]" />
-                    <span>Submit & Book Strategy Consultation</span>
+                    <span>Confirm & Book Strategy Session</span>
                   </>
                 )}
               </button>

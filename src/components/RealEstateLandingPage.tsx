@@ -1214,9 +1214,6 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
             </p>
           </div>
 
-          {/* Google Workspace Account Connection */}
-          <GoogleConnectBar />
-
           {/* Form container */}
           <div className="bg-white text-gray-900 rounded-3xl p-6 sm:p-10 shadow-2xl border border-gray-100">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -1395,12 +1392,12 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin text-[#9ce2c7]" />
-                    <span>Scheduling & Syncing with Google Workspace...</span>
+                    <span>Booking Appointment & Syncing Calendar...</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4 text-[#9ce2c7]" />
-                    <span>Book Real Estate Strategy Session</span>
+                    <span>Confirm & Book Strategy Session</span>
                   </>
                 )}
               </button>
