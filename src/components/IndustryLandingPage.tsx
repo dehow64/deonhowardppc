@@ -980,8 +980,12 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
     }
   };
 
-  const handleSubmitStep1 = (e: React.FormEvent) => {
+  const handleSubmitStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const formElement = (e.target as HTMLElement).closest('form') || (e.currentTarget as HTMLFormElement);
+    const formData = new FormData(formElement);
+    const dataObj = Object.fromEntries(formData.entries());
 
     const firstNameTrim = indForm.firstName.trim();
     const lastNameTrim = indForm.lastName.trim();
@@ -991,7 +995,6 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
       return;
     }
 
-    const selectedDateStr = selectedBookingDate;
     const serviceName = `Industry Acquisition (${indForm.industry || config.title})`;
 
     const fullMessage = [
@@ -1000,9 +1003,25 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
       `90-Day Goal: ${indForm.revenueGoal}`,
       `Ad Budget: ${indForm.adBudget}`,
       `Services: ${indForm.services.join(', ') || 'All Services'}`,
-      indForm.projectDescription ? `Project Details: ${indForm.projectDescription}` : '',
-      `Scheduled Appointment: ${selectedDateStr} at ${selectedSlot}`
+      indForm.projectDescription ? `Project Details: ${indForm.projectDescription}` : ''
     ].filter(Boolean).join('\n');
+
+    // Automatically store all field key-value pairs into pendingLeadData in sessionStorage
+    dataObj.name = fullName;
+    dataObj.first_name = firstNameTrim;
+    dataObj.last_name = lastNameTrim;
+    dataObj.email = indForm.email.trim();
+    dataObj.phone = indForm.phone.trim() || PHONE_NUMBER;
+    dataObj.industry = indForm.industry || config.title;
+    dataObj.current_revenue = indForm.currentRevenue;
+    dataObj.revenue_goal_90day = indForm.revenueGoal;
+    dataObj.monthly_ad_budget = indForm.adBudget;
+    dataObj.services_interested = indForm.services.join(', ') || 'All Services';
+    dataObj.project_description = indForm.projectDescription || 'None provided';
+    dataObj.message = fullMessage;
+    dataObj.submitted_at = new Date().toISOString();
+
+    sessionStorage.setItem('pendingLeadData', JSON.stringify(dataObj));
 
     const submissionPayload: ContactFormData = {
       firstName: firstNameTrim,
@@ -1013,43 +1032,13 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
       service: serviceName,
       budget: indForm.adBudget,
       message: fullMessage,
-      selectedDate: selectedDateStr,
+      selectedDate: selectedBookingDate,
       selectedTimeSlot: selectedSlot
     };
 
     setSavedLeadData(submissionPayload);
 
-    // 1. Store form values in memory (window.storedLeadData = new URLSearchParams(...))
-    const formParams = new URLSearchParams();
-    formParams.append('name', fullName);
-    formParams.append('first_name', firstNameTrim);
-    formParams.append('last_name', lastNameTrim);
-    formParams.append('email', indForm.email);
-    formParams.append('phone', indForm.phone || PHONE_NUMBER);
-    formParams.append('industry', indForm.industry || config.title);
-    formParams.append('current_revenue', indForm.currentRevenue);
-    formParams.append('revenue_goal_90day', indForm.revenueGoal);
-    formParams.append('monthly_ad_budget', indForm.adBudget);
-    formParams.append('services_interested', indForm.services.join(', ') || 'All Services');
-    formParams.append('project_description', indForm.projectDescription || 'None provided');
-    formParams.append('message', fullMessage);
-    formParams.append('submitted_at', new Date().toISOString());
-
-    window.storedLeadData = formParams;
-
-    // Send immediately to Google Apps Script Webhook in background so lead is always saved
-    try {
-      fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formParams.toString()
-      }).catch((e) => console.warn('Background lead capture note:', e));
-    } catch (err) {
-      console.warn('Dispatch note:', err);
-    }
-
-    // 2. Smoothly transition the view to Step 2 without reloading
+    // Smoothly transition to STEP 2 (Embedded Calendar) without making any network requests yet
     setIndStep(2);
     const ctaEl = document.getElementById('ind-cta');
     if (ctaEl) {
@@ -1057,39 +1046,23 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
     }
   };
 
-  const handleFinalizeIndBooking = async () => {
+  // STEP 2: LISTEN FOR GOOGLE CALENDAR APPOINTMENT COMPLETION
+  useEffect(() => {
+    const handleCalendarMessage = (e: MessageEvent) => {
+      if (e.origin && (e.origin.includes('calendar.google.com') || e.origin.includes('calendar.app.google'))) {
+        window.location.href = '/thank-you';
+      }
+    };
+
+    window.addEventListener('message', handleCalendarMessage);
+    return () => {
+      window.removeEventListener('message', handleCalendarMessage);
+    };
+  }, []);
+
+  const handleFinalizeIndBooking = () => {
     setIsSubmitting(true);
-
-    if (window.storedLeadData) {
-      try {
-        await fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: window.storedLeadData.toString()
-        });
-      } catch (err) {
-        console.warn('Sync notice:', err);
-      }
-    }
-
-    if (savedLeadData) {
-      try {
-        await scheduleGoogleWorkspaceAppointment(savedLeadData);
-      } catch (e) {
-        console.warn('Calendar sync notice:', e);
-      }
-    }
-
-    if (onFormSubmitted && savedLeadData) {
-      onFormSubmitted({
-        ...savedLeadData,
-        selectedDate: selectedBookingDate,
-        selectedTimeSlot: selectedSlot
-      });
-    } else {
-      window.location.href = '/thank-you';
-    }
+    window.location.href = '/thank-you';
   };
 
   return (
@@ -1641,6 +1614,7 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
                     </label>
                     <input
                       type="text"
+                      name="firstName"
                       required
                       placeholder="Deon"
                       value={indForm.firstName}
@@ -1656,6 +1630,7 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
                     </label>
                     <input
                       type="text"
+                      name="lastName"
                       required
                       placeholder="Howard"
                       value={indForm.lastName}
@@ -1674,6 +1649,7 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
                     </label>
                     <input
                       type="email"
+                      name="email"
                       required
                       placeholder="deon@company.com"
                       value={indForm.email}
@@ -1689,6 +1665,7 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
                     </label>
                     <input
                       type="tel"
+                      name="phone"
                       placeholder="(555) 000-0000"
                       value={indForm.phone}
                       onChange={(e) => setIndForm({ ...indForm, phone: e.target.value })}
@@ -1705,6 +1682,7 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
                   </label>
                   <input
                     type="text"
+                    name="industry"
                     placeholder={config.title}
                     value={indForm.industry}
                     onChange={(e) => setIndForm({ ...indForm, industry: e.target.value })}
@@ -1720,6 +1698,7 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
                       <span>Average Current Monthly Revenue</span>
                     </label>
                     <select
+                      name="currentRevenue"
                       value={indForm.currentRevenue}
                       onChange={(e) => setIndForm({ ...indForm, currentRevenue: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
@@ -1738,6 +1717,7 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
                       <span>90-Day Revenue Goal</span>
                     </label>
                     <select
+                      name="revenueGoal"
                       value={indForm.revenueGoal}
                       onChange={(e) => setIndForm({ ...indForm, revenueGoal: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
@@ -1758,6 +1738,7 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
                     <span>Projected Monthly Ad Budget</span>
                   </label>
                   <select
+                    name="adBudget"
                     value={indForm.adBudget}
                     onChange={(e) => setIndForm({ ...indForm, adBudget: e.target.value })}
                     className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"

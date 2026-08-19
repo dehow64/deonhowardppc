@@ -135,8 +135,12 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
     }
   };
 
-  const handleSubmitStep1 = (e: React.FormEvent) => {
+  const handleSubmitStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const formElement = (e.target as HTMLElement).closest('form') || (e.currentTarget as HTMLFormElement);
+    const formData = new FormData(formElement);
+    const dataObj = Object.fromEntries(formData.entries());
 
     const firstNameTrim = reForm.firstName.trim();
     const lastNameTrim = reForm.lastName.trim();
@@ -146,8 +150,6 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
       return;
     }
 
-    const selectedDateStr = selectedBookingDate;
-
     const fullMessage = [
       `Role: ${reForm.reRole}`,
       `Industry/Niche Market: ${reForm.nicheMarket || 'General Real Estate'}`,
@@ -155,9 +157,26 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
       `90-Day Goal: ${reForm.revenueGoal}`,
       `Ad Budget: ${reForm.adBudget}`,
       `Services: ${reForm.services.join(', ') || 'All Services'}`,
-      reForm.projectDescription ? `Project Details: ${reForm.projectDescription}` : '',
-      `Scheduled Appointment: ${selectedDateStr} at ${selectedSlot}`
+      reForm.projectDescription ? `Project Details: ${reForm.projectDescription}` : ''
     ].filter(Boolean).join('\n');
+
+    // Automatically store all field key-value pairs into pendingLeadData in sessionStorage
+    dataObj.name = fullName;
+    dataObj.first_name = firstNameTrim;
+    dataObj.last_name = lastNameTrim;
+    dataObj.email = reForm.email.trim();
+    dataObj.phone = reForm.phone.trim() || PHONE_NUMBER;
+    dataObj.role_description = reForm.reRole;
+    dataObj.niche_market = reForm.nicheMarket || 'Real Estate';
+    dataObj.current_revenue = reForm.currentRevenue;
+    dataObj.revenue_goal_90day = reForm.revenueGoal;
+    dataObj.monthly_ad_budget = reForm.adBudget;
+    dataObj.services_interested = reForm.services.join(', ') || 'All Services';
+    dataObj.project_description = reForm.projectDescription || 'None provided';
+    dataObj.message = fullMessage;
+    dataObj.submitted_at = new Date().toISOString();
+
+    sessionStorage.setItem('pendingLeadData', JSON.stringify(dataObj));
 
     const submissionPayload: ContactFormData = {
       firstName: firstNameTrim,
@@ -168,44 +187,13 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
       service: `Real Estate Acquisition (${reForm.reRole})`,
       budget: reForm.adBudget,
       message: fullMessage,
-      selectedDate: selectedDateStr,
+      selectedDate: selectedBookingDate,
       selectedTimeSlot: selectedSlot
     };
 
     setSavedLeadData(submissionPayload);
 
-    // 1. Store form values in memory (window.storedLeadData = new URLSearchParams(...))
-    const formParams = new URLSearchParams();
-    formParams.append('name', fullName);
-    formParams.append('first_name', firstNameTrim);
-    formParams.append('last_name', lastNameTrim);
-    formParams.append('email', reForm.email);
-    formParams.append('phone', reForm.phone || PHONE_NUMBER);
-    formParams.append('role_description', reForm.reRole);
-    formParams.append('niche_market', reForm.nicheMarket || 'Real Estate');
-    formParams.append('current_revenue', reForm.currentRevenue);
-    formParams.append('revenue_goal_90day', reForm.revenueGoal);
-    formParams.append('monthly_ad_budget', reForm.adBudget);
-    formParams.append('services_interested', reForm.services.join(', ') || 'All Services');
-    formParams.append('project_description', reForm.projectDescription || 'None provided');
-    formParams.append('message', fullMessage);
-    formParams.append('submitted_at', new Date().toISOString());
-
-    window.storedLeadData = formParams;
-
-    // Send immediately to Google Apps Script Webhook in background so lead is always saved
-    try {
-      fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formParams.toString()
-      }).catch((e) => console.warn('Background lead capture note:', e));
-    } catch (err) {
-      console.warn('Dispatch note:', err);
-    }
-
-    // 2. Smoothly transition the view to Step 2 without reloading
+    // Smoothly transition to STEP 2 (Embedded Calendar) without making any network requests yet
     setReStep(2);
     const ctaEl = document.getElementById('re-cta');
     if (ctaEl) {
@@ -213,39 +201,23 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
     }
   };
 
-  const handleFinalizeREBooking = async () => {
+  // STEP 2: LISTEN FOR GOOGLE CALENDAR APPOINTMENT COMPLETION
+  useEffect(() => {
+    const handleCalendarMessage = (e: MessageEvent) => {
+      if (e.origin && (e.origin.includes('calendar.google.com') || e.origin.includes('calendar.app.google'))) {
+        window.location.href = '/thank-you';
+      }
+    };
+
+    window.addEventListener('message', handleCalendarMessage);
+    return () => {
+      window.removeEventListener('message', handleCalendarMessage);
+    };
+  }, []);
+
+  const handleFinalizeREBooking = () => {
     setIsSubmitting(true);
-
-    if (window.storedLeadData) {
-      try {
-        await fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: window.storedLeadData.toString()
-        });
-      } catch (err) {
-        console.warn('Sync notice:', err);
-      }
-    }
-
-    if (savedLeadData) {
-      try {
-        await scheduleGoogleWorkspaceAppointment(savedLeadData);
-      } catch (e) {
-        console.warn('Calendar sync notice:', e);
-      }
-    }
-
-    if (onFormSubmitted && savedLeadData) {
-      onFormSubmitted({
-        ...savedLeadData,
-        selectedDate: selectedBookingDate,
-        selectedTimeSlot: selectedSlot
-      });
-    } else {
-      window.location.href = '/thank-you';
-    }
+    window.location.href = '/thank-you';
   };
 
   return (
@@ -1396,6 +1368,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                     </label>
                     <input
                       type="text"
+                      name="firstName"
                       required
                       placeholder="Deon"
                       value={reForm.firstName}
@@ -1411,6 +1384,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                     </label>
                     <input
                       type="text"
+                      name="lastName"
                       required
                       placeholder="Howard"
                       value={reForm.lastName}
@@ -1429,6 +1403,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                     </label>
                     <input
                       type="email"
+                      name="email"
                       required
                       placeholder="deon@brokerage.com"
                       value={reForm.email}
@@ -1444,6 +1419,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                     </label>
                     <input
                       type="tel"
+                      name="phone"
                       placeholder="(555) 000-0000"
                       value={reForm.phone}
                       onChange={(e) => setReForm({ ...reForm, phone: e.target.value })}
@@ -1459,6 +1435,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                     <span>Which best describes you?</span>
                   </label>
                   <select
+                    name="reRole"
                     value={reForm.reRole}
                     onChange={(e) => setReForm({ ...reForm, reRole: e.target.value })}
                     className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
@@ -1480,6 +1457,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                     </label>
                     <input
                       type="text"
+                      name="nicheMarket"
                       placeholder="e.g. Luxury Residential, Commercial, Multi-family"
                       value={reForm.nicheMarket}
                       onChange={(e) => setReForm({ ...reForm, nicheMarket: e.target.value })}
@@ -1493,6 +1471,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                       <span>Average Current Monthly Revenue</span>
                     </label>
                     <select
+                      name="currentRevenue"
                       value={reForm.currentRevenue}
                       onChange={(e) => setReForm({ ...reForm, currentRevenue: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
@@ -1514,6 +1493,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                       <span>90-Day Revenue Goal</span>
                     </label>
                     <select
+                      name="revenueGoal"
                       value={reForm.revenueGoal}
                       onChange={(e) => setReForm({ ...reForm, revenueGoal: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
@@ -1532,6 +1512,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                       <span>Projected Monthly Ad Budget</span>
                     </label>
                     <select
+                      name="adBudget"
                       value={reForm.adBudget}
                       onChange={(e) => setReForm({ ...reForm, adBudget: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
@@ -1593,6 +1574,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                   </label>
                   <textarea
                     rows={3}
+                    name="projectDescription"
                     placeholder="Tell us about your active listings, target zip codes, average commission per deal, and goals..."
                     value={reForm.projectDescription}
                     onChange={(e) => setReForm({ ...reForm, projectDescription: e.target.value })}

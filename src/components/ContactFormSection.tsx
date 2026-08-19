@@ -128,8 +128,12 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
   };
 
   // STEP 1: FORM SUBMISSION HANDLER
-  const handleSubmitStep1 = (e: React.FormEvent) => {
+  const handleSubmitStep1 = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const formElement = (e.target as HTMLElement).closest('form') || (e.currentTarget as HTMLFormElement);
+    const formData = new FormData(formElement);
+    const dataObj = Object.fromEntries(formData.entries());
 
     const firstNameValue = formState.firstName.trim();
     const lastNameValue = formState.lastName.trim();
@@ -154,36 +158,23 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
       formState.projectDescription ? `Project Details: ${formState.projectDescription}` : ''
     ].filter(Boolean).join('\n');
 
-    // 1. Store the form values in memory (window.storedLeadData = new URLSearchParams(...))
-    const formDataParams = new URLSearchParams();
-    formDataParams.append('name', fullName);
-    formDataParams.append('first_name', firstNameValue);
-    formDataParams.append('last_name', lastNameValue);
-    formDataParams.append('email', emailValue);
-    formDataParams.append('phone', formState.phone || PHONE_NUMBER);
-    formDataParams.append('website', formState.website || 'None provided');
-    formDataParams.append('industry', resolvedIndustry);
-    formDataParams.append('current_revenue', formState.currentRevenue);
-    formDataParams.append('revenue_goal_90day', formState.revenueGoal);
-    formDataParams.append('monthly_ad_budget', formState.adBudget);
-    formDataParams.append('services_interested', formState.services.join(', ') || 'All Services');
-    formDataParams.append('project_description', formState.projectDescription || 'No details provided');
-    formDataParams.append('message', compiledMessage);
-    formDataParams.append('submitted_at', new Date().toISOString());
+    // Automatically store all field key-value pairs into pendingLeadData in sessionStorage
+    dataObj.name = fullName;
+    dataObj.first_name = firstNameValue;
+    dataObj.last_name = lastNameValue;
+    dataObj.email = emailValue;
+    dataObj.phone = formState.phone || PHONE_NUMBER;
+    dataObj.website = formState.website || 'None provided';
+    dataObj.industry = resolvedIndustry;
+    dataObj.current_revenue = formState.currentRevenue;
+    dataObj.revenue_goal_90day = formState.revenueGoal;
+    dataObj.monthly_ad_budget = formState.adBudget;
+    dataObj.services_interested = formState.services.join(', ') || 'All Services';
+    dataObj.project_description = formState.projectDescription || 'No details provided';
+    dataObj.message = compiledMessage;
+    dataObj.submitted_at = new Date().toISOString();
 
-    window.storedLeadData = formDataParams;
-
-    // Send immediately to Google Apps Script Webhook in background so lead is always saved
-    try {
-      fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formDataParams.toString()
-      }).catch((e) => console.warn('Background lead capture note:', e));
-    } catch (err) {
-      console.warn('Dispatch note:', err);
-    }
+    sessionStorage.setItem('pendingLeadData', JSON.stringify(dataObj));
 
     const leadPayload: ContactFormData = {
       firstName: firstNameValue,
@@ -202,7 +193,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
 
     setSubmittedLeadData(leadPayload);
 
-    // 2. Smoothly transition the view to Step 2 without reloading
+    // Smoothly transition to STEP 2 (Embedded Calendar) without making any network requests yet
     setCurrentStep(2);
     const contactEl = document.getElementById('contact');
     if (contactEl) {
@@ -210,40 +201,24 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
     }
   };
 
+  // STEP 2: LISTEN FOR GOOGLE CALENDAR APPOINTMENT COMPLETION
+  useEffect(() => {
+    const handleCalendarMessage = (e: MessageEvent) => {
+      if (e.origin && (e.origin.includes('calendar.google.com') || e.origin.includes('calendar.app.google'))) {
+        window.location.href = '/thank-you';
+      }
+    };
+
+    window.addEventListener('message', handleCalendarMessage);
+    return () => {
+      window.removeEventListener('message', handleCalendarMessage);
+    };
+  }, []);
+
   // STEP 2: FINALIZE & REDIRECT TO THANK YOU PAGE
-  const handleFinalizeBooking = async () => {
+  const handleFinalizeBooking = () => {
     setIsFinalizing(true);
-
-    if (window.storedLeadData) {
-      try {
-        await fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: window.storedLeadData.toString()
-        });
-      } catch (err) {
-        console.warn('Sync notice:', err);
-      }
-    }
-
-    if (submittedLeadData) {
-      try {
-        await scheduleGoogleWorkspaceAppointment(submittedLeadData);
-      } catch (e) {
-        console.warn('Calendar sync notice:', e);
-      }
-    }
-
-    if (onFormSubmitted && submittedLeadData) {
-      onFormSubmitted({
-        ...submittedLeadData,
-        selectedDate: selectedBookingDate,
-        selectedTimeSlot: selectedSlot
-      });
-    } else {
-      window.location.href = '/thank-you';
-    }
+    window.location.href = '/thank-you';
   };
 
   return (
@@ -309,6 +284,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   </label>
                   <input
                     type="text"
+                    name="firstName"
                     required
                     placeholder="John"
                     value={formState.firstName}
@@ -324,6 +300,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   </label>
                   <input
                     type="text"
+                    name="lastName"
                     required
                     placeholder="Smith"
                     value={formState.lastName}
@@ -342,6 +319,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   </label>
                   <input
                     type="email"
+                    name="email"
                     required
                     placeholder="john@company.com"
                     value={formState.email}
@@ -357,6 +335,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   </label>
                   <input
                     type="tel"
+                    name="phone"
                     placeholder="(555) 000-0000"
                     value={formState.phone}
                     onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
@@ -372,8 +351,9 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   <span>Website URL</span>
                 </label>
                 <input
-                  type="url"
-                  placeholder="https://yourcompany.com"
+                  type="text"
+                  name="website"
+                  placeholder="www.yourcompany.com"
                   value={formState.website}
                   onChange={(e) => setFormState({ ...formState, website: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none transition-all"
@@ -387,6 +367,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   <span>Industry *</span>
                 </label>
                 <select
+                  name="industry"
                   value={formState.industry}
                   onChange={(e) => setFormState({ ...formState, industry: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none transition-all"
@@ -407,6 +388,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   </label>
                   <input
                     type="text"
+                    name="otherIndustry"
                     required
                     placeholder="e.g. Manufacturing, Solar, Automotive, SaaS..."
                     value={formState.otherIndustry}
@@ -424,6 +406,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                     <span>Average Current Monthly Revenue</span>
                   </label>
                   <select
+                    name="currentRevenue"
                     value={formState.currentRevenue}
                     onChange={(e) => setFormState({ ...formState, currentRevenue: e.target.value })}
                     className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none transition-all"
@@ -442,6 +425,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                     <span>90-Day Revenue Goal</span>
                   </label>
                   <select
+                    name="revenueGoal"
                     value={formState.revenueGoal}
                     onChange={(e) => setFormState({ ...formState, revenueGoal: e.target.value })}
                     className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none transition-all"
@@ -462,6 +446,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   <span>Projected Monthly Ad Budget</span>
                 </label>
                 <select
+                  name="adBudget"
                   value={formState.adBudget}
                   onChange={(e) => setFormState({ ...formState, adBudget: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none transition-all"
@@ -528,6 +513,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                 </label>
                 <textarea
                   rows={3}
+                  name="projectDescription"
                   placeholder="Tell us about your current campaigns, target audience, hurdles, and what success looks like in the next 90 days..."
                   value={formState.projectDescription}
                   onChange={(e) => setFormState({ ...formState, projectDescription: e.target.value })}

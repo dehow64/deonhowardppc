@@ -97,8 +97,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
     }
   };
 
-  const handleProceedToCalendar = (e: React.FormEvent) => {
+  const handleProceedToCalendar = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const formElement = (e.target as HTMLElement).closest('form') || (e.currentTarget as HTMLFormElement);
+    const formData = new FormData(formElement);
+    const dataObj = Object.fromEntries(formData.entries());
 
     const firstNameTrim = firstName.trim();
     const lastNameTrim = lastName.trim();
@@ -122,6 +126,24 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
       projectDescription ? `Project Details: ${projectDescription}` : ''
     ].filter(Boolean).join('\n');
 
+    // Automatically store all field key-value pairs into pendingLeadData in sessionStorage
+    dataObj.name = fullName;
+    dataObj.first_name = firstNameTrim;
+    dataObj.last_name = lastNameTrim;
+    dataObj.email = email.trim();
+    dataObj.phone = phone.trim() || PHONE_NUMBER;
+    dataObj.website = website.trim() || 'None provided';
+    dataObj.industry = resolvedIndustry;
+    dataObj.current_revenue = currentRevenue;
+    dataObj.revenue_goal_90day = revenueGoal;
+    dataObj.monthly_ad_budget = adBudget;
+    dataObj.services_interested = selectedServices.join(', ') || 'All Services';
+    dataObj.project_description = projectDescription || 'None provided';
+    dataObj.message = fullMessage;
+    dataObj.submitted_at = new Date().toISOString();
+
+    sessionStorage.setItem('pendingLeadData', JSON.stringify(dataObj));
+
     const submissionData: ContactFormData = {
       firstName: firstNameTrim,
       lastName: lastNameTrim,
@@ -137,68 +159,27 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
 
     setSavedLeadData(submissionData);
 
-    // 1. Store form values in memory (window.storedLeadData = new URLSearchParams(...))
-    const formParams = new URLSearchParams();
-    formParams.append('name', fullName);
-    formParams.append('first_name', firstNameTrim);
-    formParams.append('last_name', lastNameTrim);
-    formParams.append('email', email);
-    formParams.append('phone', phone || PHONE_NUMBER);
-    formParams.append('website', website || 'None provided');
-    formParams.append('industry', resolvedIndustry);
-    formParams.append('current_revenue', currentRevenue);
-    formParams.append('revenue_goal_90day', revenueGoal);
-    formParams.append('monthly_ad_budget', adBudget);
-    formParams.append('services_interested', selectedServices.join(', ') || 'All Services');
-    formParams.append('project_description', projectDescription || 'None provided');
-    formParams.append('message', fullMessage);
-    formParams.append('submitted_at', new Date().toISOString());
-
-    window.storedLeadData = formParams;
-
-    // Send immediately to Google Apps Script Webhook in background so lead is always saved
-    try {
-      fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formParams.toString()
-      }).catch((err) => console.warn('Modal background lead capture note:', err));
-    } catch (err) {
-      console.warn('Modal background dispatch warning:', err);
-    }
-
-    // 2. Smoothly transition the view to Step 2 without reloading
+    // Smoothly transition to STEP 2 (Embedded Calendar) without making any network requests yet
     setCurrentStep(2);
   };
 
-  const handleFinalizeModalBooking = async () => {
+  // STEP 2: LISTEN FOR GOOGLE CALENDAR APPOINTMENT COMPLETION
+  useEffect(() => {
+    const handleCalendarMessage = (e: MessageEvent) => {
+      if (e.origin && (e.origin.includes('calendar.google.com') || e.origin.includes('calendar.app.google'))) {
+        window.location.href = '/thank-you';
+      }
+    };
+
+    window.addEventListener('message', handleCalendarMessage);
+    return () => {
+      window.removeEventListener('message', handleCalendarMessage);
+    };
+  }, []);
+
+  const handleFinalizeModalBooking = () => {
     setIsFinalizing(true);
-
-    if (window.storedLeadData) {
-      try {
-        await fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: window.storedLeadData.toString()
-        });
-      } catch (err) {
-        console.warn('Sync notice:', err);
-      }
-    }
-
-    if (savedLeadData) {
-      try {
-        await scheduleGoogleWorkspaceAppointment(savedLeadData);
-      } catch (e) {
-        console.warn('Calendar sync notice:', e);
-      }
-      onSuccess(savedLeadData);
-    } else {
-      window.location.href = '/thank-you';
-    }
-    onClose();
+    window.location.href = '/thank-you';
   };
 
   return (
@@ -238,6 +219,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                   </label>
                   <input
                     type="text"
+                    name="firstName"
                     required
                     placeholder="John"
                     value={firstName}
@@ -252,6 +234,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                   </label>
                   <input
                     type="text"
+                    name="lastName"
                     required
                     placeholder="Smith"
                     value={lastName}
@@ -270,6 +253,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                   </label>
                   <input
                     type="email"
+                    name="email"
                     required
                     placeholder="john@company.com"
                     value={email}
@@ -284,6 +268,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                   </label>
                   <input
                     type="tel"
+                    name="phone"
                     placeholder="(555) 000-0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -299,8 +284,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                   <span>Website URL</span>
                 </label>
                 <input
-                  type="url"
-                  placeholder="https://yourcompany.com"
+                  type="text"
+                  name="website"
+                  placeholder="www.yourcompany.com"
                   value={website}
                   onChange={(e) => setWebsite(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-2.5 px-3.5 text-xs font-bold text-gray-900 outline-none"
@@ -314,6 +300,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                   <span>Industry *</span>
                 </label>
                 <select
+                  name="industry"
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-2.5 px-3.5 text-xs font-bold text-gray-900 outline-none"
@@ -332,6 +319,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                   </label>
                   <input
                     type="text"
+                    name="otherIndustry"
                     required
                     placeholder="e.g. Manufacturing, Solar, Automotive, SaaS..."
                     value={otherIndustry}
@@ -349,6 +337,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                     <span>Average Monthly Revenue</span>
                   </label>
                   <select
+                    name="currentRevenue"
                     value={currentRevenue}
                     onChange={(e) => setCurrentRevenue(e.target.value)}
                     className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-2.5 px-3.5 text-xs font-bold text-gray-900 outline-none"
@@ -367,6 +356,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                     <span>90-Day Revenue Goal</span>
                   </label>
                   <select
+                    name="revenueGoal"
                     value={revenueGoal}
                     onChange={(e) => setRevenueGoal(e.target.value)}
                     className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-2.5 px-3.5 text-xs font-bold text-gray-900 outline-none"
@@ -387,6 +377,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                   <span>Projected Monthly Ad Budget</span>
                 </label>
                 <select
+                  name="adBudget"
                   value={adBudget}
                   onChange={(e) => setAdBudget(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-2.5 px-3.5 text-xs font-bold text-gray-900 outline-none"
@@ -447,6 +438,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                 </label>
                 <textarea
                   rows={2}
+                  name="projectDescription"
                   placeholder="Tell us about your target market, past campaigns, and goals..."
                   value={projectDescription}
                   onChange={(e) => setProjectDescription(e.target.value)}

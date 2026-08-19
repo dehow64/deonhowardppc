@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   CheckCircle2, 
   Calendar, 
@@ -9,9 +9,7 @@ import {
   ExternalLink, 
   Download, 
   ArrowLeft, 
-  FileText, 
-  Sparkles,
-  ArrowRight
+  Sparkles
 } from 'lucide-react';
 import { ContactFormData } from '../types';
 import { TARGET_ADMIN_EMAIL } from '../services/googleWorkspace';
@@ -34,12 +32,48 @@ declare global {
 
 export const ThankYouPage: React.FC<ThankYouPageProps> = ({
   data,
-  onBackToMain,
-  onBrowseCaseStudies
+  onBackToMain
 }) => {
-  // Fire Google Ads & Google Analytics conversion tags on page load
+  const [leadInfo, setLeadInfo] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem('pendingLeadData');
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (e) {
+        console.warn('Failed to parse pendingLeadData initial:', e);
+      }
+    }
+    return data;
+  });
+
+  // STEP 3: Read pendingLeadData on mount, send to Google Apps Script, clear storage, and trigger analytics
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    try {
+      const pendingData = sessionStorage.getItem('pendingLeadData');
+      if (pendingData) {
+        const parsedLead = JSON.parse(pendingData);
+        setLeadInfo(parsedLead);
+
+        // Send payload to Google Apps Script Webhook
+        fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(parsedLead).toString()
+        }).catch((err) => {
+          console.warn('Webhook lead submission note:', err);
+        });
+
+        // Clear sessionStorage to prevent duplicate submissions
+        sessionStorage.removeItem('pendingLeadData');
+      }
+    } catch (err) {
+      console.warn('Step 3 lead processing notice:', err);
+    }
 
     try {
       // 1. Data Layer Push for GTM / Google Analytics 4
@@ -47,14 +81,14 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
       window.dataLayer.push({
         event: 'lead_form_submitted',
         event_category: 'Consultation Booking',
-        event_label: data?.service || 'Marketing Strategy Session',
+        event_label: leadInfo?.service || leadInfo?.service_type || data?.service || 'Marketing Strategy Session',
         value: 1.0,
         currency: 'USD',
-        lead_name: data ? `${data.firstName} ${data.lastName}`.trim() : 'Prospective Client',
-        lead_email: data?.email || '',
-        lead_service: data?.service || 'Marketing Automation',
-        lead_date: data?.selectedDate || '',
-        lead_time: data?.selectedTimeSlot || ''
+        lead_name: leadInfo?.name || (data ? `${data.firstName} ${data.lastName}`.trim() : 'Prospective Client'),
+        lead_email: leadInfo?.email || data?.email || '',
+        lead_service: leadInfo?.service || leadInfo?.service_type || data?.service || 'Marketing Automation',
+        lead_date: leadInfo?.selectedDate || data?.selectedDate || '',
+        lead_time: leadInfo?.selectedTimeSlot || data?.selectedTimeSlot || ''
       });
 
       // 2. Direct gtag call if Google Tag is present
@@ -62,14 +96,14 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
         window.gtag('event', 'generate_lead', {
           value: 1.0,
           currency: 'USD',
-          event_label: data?.service || 'Strategy Session'
+          event_label: leadInfo?.service || leadInfo?.service_type || data?.service || 'Strategy Session'
         });
       }
 
       // 3. Meta / Facebook Pixel Lead event if present
       if (typeof window.fbq === 'function') {
         window.fbq('track', 'Lead', {
-          content_name: data?.service || 'Strategy Session',
+          content_name: leadInfo?.service || leadInfo?.service_type || data?.service || 'Strategy Session',
           currency: 'USD',
           value: 1.0
         });
@@ -79,11 +113,19 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
     }
   }, [data]);
 
-  const clientName = data?.firstName ? `${data.firstName} ${data.lastName}`.trim() : 'Valued Client';
-  const displayDate = data?.selectedDate || getTodayFormatted();
-  const displayTime = data?.selectedTimeSlot || '10:00 AM - 11:00 AM (EDT)';
-  const displayService = data?.service || 'Custom Marketing Automation & PPC Growth System';
-  const displayEmail = data?.email || 'Your provided email';
+  const clientName = leadInfo?.name || 
+    (leadInfo?.firstName && leadInfo?.lastName ? `${leadInfo.firstName} ${leadInfo.lastName}`.trim() : '') ||
+    (leadInfo?.first_name && leadInfo?.last_name ? `${leadInfo.first_name} ${leadInfo.last_name}`.trim() : '') ||
+    (data?.firstName ? `${data.firstName} ${data.lastName}`.trim() : 'Valued Client');
+
+  const displayDate = leadInfo?.selectedDate || data?.selectedDate || getTodayFormatted();
+  const displayTime = leadInfo?.selectedTimeSlot || data?.selectedTimeSlot || '10:00 AM - 11:00 AM (EDT)';
+  const displayService = leadInfo?.service || leadInfo?.service_type || leadInfo?.services_interested || data?.service || 'Custom Marketing Automation & PPC Growth System';
+  const displayEmail = leadInfo?.email || data?.email || 'Your provided email';
+  const displayPhone = leadInfo?.phone || data?.phone || PHONE_NUMBER;
+  const displayCompany = leadInfo?.companyName || leadInfo?.company || leadInfo?.niche_market || leadInfo?.industry || data?.companyName || '';
+  const displayWebsite = leadInfo?.website || data?.website || '';
+  const displayBudget = leadInfo?.budget || leadInfo?.adBudget || leadInfo?.monthly_ad_budget || data?.budget || 'Custom';
 
   // Google Calendar Universal Web URL
   const calTitle = encodeURIComponent(`1-on-1 Marketing Strategy Session: ${clientName}`);
@@ -91,9 +133,9 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
     `Marketing Automation Strategy Call with Deon Howard (${TARGET_ADMIN_EMAIL})\n\n` +
     `Client: ${clientName}\n` +
     `Email: ${displayEmail}\n` +
-    `Phone: ${data?.phone || PHONE_NUMBER}\n` +
+    `Phone: ${displayPhone}\n` +
     `Service: ${displayService}\n` +
-    `Target Monthly Budget: ${data?.budget || 'Custom'}\n\n` +
+    `Target Monthly Budget: ${displayBudget}\n\n` +
     `Meeting Host: Deon Howard PPC (${TARGET_ADMIN_EMAIL})`
   );
   const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&details=${calDetails}&add=${encodeURIComponent(TARGET_ADMIN_EMAIL)},${encodeURIComponent(displayEmail)}`;
@@ -230,14 +272,14 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
                 Focus Area / Service:
               </span>
-              {data?.website && (
+              {displayWebsite && (
                 <span className="text-[11px] text-gray-300 font-mono">
-                  Website: <span className="text-[#9ce2c7] underline">{data.website}</span>
+                  Website: <span className="text-[#9ce2c7] underline">{displayWebsite}</span>
                 </span>
               )}
             </div>
             <p className="text-sm font-semibold text-[#9ce2c7]">
-              {displayService} {data?.companyName ? `• ${data.companyName}` : ''}
+              {displayService} {displayCompany ? `• ${displayCompany}` : ''}
             </p>
           </div>
 
