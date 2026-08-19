@@ -1,14 +1,27 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, ChevronRight, Sparkles, Phone } from 'lucide-react';
+import { getUpcomingBookingDays, getCurrentWeekRangeLabel } from '../utils/dateUtils';
+import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
 
 interface HeroProps {
   onBookClick: () => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
-  const [selectedSlot, setSelectedSlot] = useState<string>('10:00 am');
+  const upcomingDays = getUpcomingBookingDays(5);
+  const [selectedDayIndex, setSelectedDayIndex] = useState<number>(0);
 
-  const timeSlots = ['10:00 am', '10:30 am', '11:00 am'];
+  const activeDay = upcomingDays[selectedDayIndex] || upcomingDays[0];
+  const timeSlots = activeDay?.timeSlots || ['10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM'];
+  const [selectedSlot, setSelectedSlot] = useState<string>(timeSlots[0] || '10:00 AM');
+
+  const handleSelectDay = (index: number) => {
+    setSelectedDayIndex(index);
+    const newDay = upcomingDays[index];
+    if (newDay && newDay.timeSlots.length > 0) {
+      setSelectedSlot(newDay.timeSlots[0]);
+    }
+  };
 
   const scrollToBookingForm = () => {
     const contactSec = document.getElementById('contact');
@@ -78,29 +91,68 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
           <div className="lg:col-span-6 lg:pl-8">
             <div className="bg-[#9ce2c7] text-[#131d17] p-6 sm:p-8 rounded-3xl shadow-2xl max-w-md mx-auto lg:ml-auto border border-white/40">
               
-              <div className="text-center pb-5 border-b border-[#131d17]/15">
+              <div className="text-center pb-4 border-b border-[#131d17]/15">
+                <div className="inline-flex items-center space-x-1.5 bg-black/10 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-[#131d17] mb-2">
+                  <Sparkles className="w-3 h-3 text-black" />
+                  <span>{getCurrentWeekRangeLabel()}</span>
+                </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#131d17]">
                   Free Automation Call
                 </h2>
-                <div className="mt-2 flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-black">
+                <div className="mt-1 flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-black">
                   <Clock className="w-4 h-4 text-black" />
                   <span>1 hr • Custom AI & Automation Blueprint</span>
                 </div>
               </div>
 
-              <div className="mt-5 space-y-4">
-                <p className="text-center text-xs font-bold uppercase tracking-widest text-[#1a2e24]">
-                  Select your strategy slot
-                </p>
-
-                {/* Date Display Pill */}
-                <div className="flex items-center justify-center space-x-2 bg-white/80 border border-white/90 py-2.5 px-4 rounded-full text-xs font-bold uppercase tracking-widest text-[#131d17]">
-                  <CalendarIcon className="w-4 h-4 text-black" />
-                  <span>August 6, 2026</span>
+              <div className="mt-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#1a2e24]">
+                    1. Select This Week's Day
+                  </p>
+                  <span className="text-[10px] font-mono font-semibold bg-white/60 px-2 py-0.5 rounded-full text-gray-800">
+                    Live Openings
+                  </span>
                 </div>
 
+                {/* Week Day Pills */}
+                <div className="grid grid-cols-5 gap-1.5">
+                  {upcomingDays.map((day, idx) => {
+                    const isSelected = selectedDayIndex === idx;
+                    return (
+                      <button
+                        key={day.formatted}
+                        type="button"
+                        onClick={() => handleSelectDay(idx)}
+                        className={`flex flex-col items-center py-2 px-1 rounded-xl transition-all cursor-pointer border text-center ${
+                          isSelected
+                            ? 'bg-black text-white border-black shadow-md transform -translate-y-0.5'
+                            : 'bg-white/80 hover:bg-white text-gray-900 border-white/60'
+                        }`}
+                      >
+                        <span className="text-[9px] font-bold uppercase tracking-wider opacity-80">
+                          {day.relativeLabel || day.dayName}
+                        </span>
+                        <span className="text-xs font-extrabold mt-0.5">
+                          {day.shortFormatted}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Selected Date Header */}
+                <div className="flex items-center justify-center space-x-2 bg-white/90 border border-white py-2 px-4 rounded-xl text-xs font-bold text-[#131d17] shadow-sm">
+                  <CalendarIcon className="w-4 h-4 text-black" />
+                  <span>{activeDay?.formatted || 'This Week'}</span>
+                </div>
+
+                <p className="text-xs font-bold uppercase tracking-widest text-[#1a2e24] pt-1">
+                  2. Choose Available Time
+                </p>
+
                 {/* Time Slots Grid */}
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {timeSlots.map((slot) => {
                     const isSelected = selectedSlot === slot;
                     return (
@@ -108,7 +160,7 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
                         key={slot}
                         id={`hero-time-slot-${slot.replace(/[:\s]/g, '-')}`}
                         onClick={() => setSelectedSlot(slot)}
-                        className={`py-2.5 px-1 text-xs font-bold uppercase tracking-wider transition-all border cursor-pointer text-center rounded-xl ${
+                        className={`py-2 px-1 text-xs font-bold uppercase tracking-wider transition-all border cursor-pointer text-center rounded-xl ${
                           isSelected
                             ? 'bg-black text-white border-black shadow-md'
                             : 'bg-white/80 hover:bg-white text-[#131d17] border-white/60'
@@ -121,27 +173,40 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
                 </div>
 
                 {/* Timezone label */}
-                <p className="text-center text-[11px] font-semibold text-[#1a2e24] uppercase tracking-wider">
-                  Eastern Daylight Time (EDT)
+                <p className="text-center text-[10px] font-semibold text-[#1a2e24] uppercase tracking-wider">
+                  Eastern Daylight Time (EDT) • 100% Instant Confirmation
                 </p>
 
                 {/* Action Link & CTA */}
-                <div className="pt-2 text-center space-y-3">
-                  <button
-                    id="hero-see-more-dates-btn"
-                    onClick={scrollToBookingForm}
-                    className="text-xs font-bold uppercase tracking-widest underline hover:text-black transition-colors cursor-pointer block w-full text-[#131d17]"
-                  >
-                    See more dates and times
-                  </button>
-
+                <div className="pt-1 text-center space-y-2.5">
                   <button
                     id="hero-confirm-slot-btn"
                     onClick={onBookClick}
-                    className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest py-3.5 transition-colors text-xs cursor-pointer rounded-full shadow-md"
+                    className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest py-3.5 transition-colors text-xs cursor-pointer rounded-full shadow-md flex items-center justify-center space-x-2"
                   >
-                    Reserve Slot ({selectedSlot})
+                    <span>Reserve {activeDay?.dayName} ({selectedSlot})</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-[#9ce2c7]" />
                   </button>
+
+                  <div className="flex items-center justify-between pt-1 px-1 text-[11px] font-bold">
+                    <button
+                      id="hero-see-more-dates-btn"
+                      onClick={scrollToBookingForm}
+                      className="uppercase tracking-wider underline hover:text-black transition-colors cursor-pointer text-[#131d17]"
+                    >
+                      Full Scheduler
+                    </button>
+
+                    <a
+                      href={PHONE_TEL}
+                      id="hero-direct-phone-btn"
+                      title={`Call ${PHONE_NUMBER}`}
+                      className="inline-flex items-center space-x-1 uppercase tracking-wider hover:underline text-[#131d17] hover:text-black transition-colors active:scale-95"
+                    >
+                      <Phone className="w-3 h-3 text-black" />
+                      <span>Call {PHONE_NUMBER}</span>
+                    </a>
+                  </div>
                 </div>
 
               </div>

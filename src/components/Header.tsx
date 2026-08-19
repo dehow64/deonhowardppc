@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, Menu, X, Calendar, ChevronUp, ChevronDown, ArrowUp, ArrowDown, Compass } from 'lucide-react';
-import { PHONE_NUMBER } from '../data/contentData';
+import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
 
 interface HeaderProps {
   onBookClick: () => void;
@@ -113,9 +113,10 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
           {/* Header Right Actions */}
           <div className="flex items-center space-x-3">
             <a
-              href={`tel:${PHONE_NUMBER.replace(/[^0-9]/g, '')}`}
+              href={PHONE_TEL}
               id="header-phone-link"
-              className="hidden sm:flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider text-[#131d17] hover:text-black transition-colors px-3 py-2 rounded-full hover:bg-black/10"
+              title={`Call ${PHONE_NUMBER}`}
+              className="hidden sm:flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider text-[#131d17] hover:text-black transition-colors px-3 py-2 rounded-full hover:bg-black/10 active:scale-95"
             >
               <Phone className="w-3.5 h-3.5 text-black" />
               <span>{PHONE_NUMBER}</span>
@@ -299,10 +300,12 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
               {/* Drawer Bottom Actions */}
               <div className="pt-6 border-t border-white/15 space-y-3">
                 <a
-                  href={`tel:${PHONE_NUMBER.replace(/[^0-9]/g, '')}`}
-                  className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-white hover:text-[#9ce2c7] py-2 transition-colors"
+                  href={PHONE_TEL}
+                  id="mobile-drawer-phone-btn"
+                  title={`Call ${PHONE_NUMBER}`}
+                  className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-black bg-[#9ce2c7] hover:bg-[#8bd6ba] py-3 px-4 rounded-full transition-all shadow-md active:scale-95"
                 >
-                  <Phone className="w-4 h-4 text-[#9ce2c7]" />
+                  <Phone className="w-4 h-4 text-black fill-current" />
                   <span>Call {PHONE_NUMBER}</span>
                 </a>
 

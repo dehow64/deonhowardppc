@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatedImage } from './AnimatedImage';
 import { 
   Building, 
@@ -36,11 +36,18 @@ import {
   BarChart3,
   Smartphone,
   CheckSquare,
+  Square,
+  User,
+  Building2,
+  Check,
   Activity,
   Share2,
-  Loader2
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
-import { PHONE_NUMBER } from '../data/contentData';
+import { PHONE_NUMBER, PHONE_TEL, GOOGLE_CALENDAR_APPOINTMENT_URL, GOOGLE_CALENDAR_EMBED_URL, AI_SERVICE_OPTIONS } from '../data/contentData';
+import { getUpcomingBookingDays, getTodayFormatted } from '../utils/dateUtils';
+const TARGET_ADMIN_EMAIL = 'deonhowardppc@gmail.com';
 import { IndustrySubNav } from './IndustrySubNav';
 import { submitToGoogleScript } from '../services/googleScript';
 import { scheduleGoogleWorkspaceAppointment } from '../services/googleWorkspace';
@@ -59,80 +66,185 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
   onFormSubmitted,
   onSelectIndustry
 }) => {
-  // Calendar & Form State
-  const [formData, setFormData] = useState({
+  // 2-Step Form & Calendar State
+  const [reStep, setReStep] = useState<1 | 2>(1);
+  const [reForm, setReForm] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    companyName: '',
-    propertyType: 'Residential & Commercial',
-    budget: '$5,000 - $10,000/mo',
-    message: ''
+    reRole: 'Solo Agent / Broker',
+    nicheMarket: '',
+    currentRevenue: '$10k - $25k / mo',
+    revenueGoal: '$25k - $50k',
+    adBudget: '$1.5k - $5k',
+    services: [
+      'Automated Conversion Funnels (AI Websites & Landing Pages)',
+      'AI Customer Acquisition Systems (Google & Meta Paid Ads)'
+    ] as string[],
+    projectDescription: ''
   });
 
-  const [activeAiDemo, setActiveAiDemo] = useState<'chatbot' | 'leadforms' | 'email' | 'clientagent'>('chatbot');
-  const [selectedDay, setSelectedDay] = useState<number>(6);
-  const [selectedSlot, setSelectedSlot] = useState<string>('10:00 AM');
-  const [showMoreSlots, setShowMoreSlots] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const currentMonth = 'August 2026';
+  const [savedLeadData, setSavedLeadData] = useState<ContactFormData | null>(null);
 
-  const daysInMonth = Array.from({ length: 31 }, (_, i) => i + 1);
-  const initialSlots = ['09:00 AM', '10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM'];
-  const extraSlots = ['04:30 PM', '05:30 PM', '06:00 PM'];
-  const displaySlots = showMoreSlots ? [...initialSlots, ...extraSlots] : initialSlots;
+  // Listen for Google Calendar appointment completions
+  useEffect(() => {
+    const handleCalendarMessage = (e: MessageEvent) => {
+      try {
+        if (e.origin && (e.origin.includes('calendar.google.com') || e.origin.includes('calendar.app.google'))) {
+          console.log('📅 Real estate Google Calendar appointment scheduled event received:', e.data);
+          if (onFormSubmitted && savedLeadData) {
+            onFormSubmitted(savedLeadData);
+          } else {
+            window.location.href = '/thank-you';
+          }
+        }
+      } catch (err) {
+        console.warn('Error evaluating calendar event message:', err);
+      }
+    };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    window.addEventListener('message', handleCalendarMessage);
+    return () => window.removeEventListener('message', handleCalendarMessage);
+  }, [onFormSubmitted, savedLeadData]);
+
+  const [activeAiDemo, setActiveAiDemo] = useState<'chatbot' | 'leadforms' | 'email' | 'clientagent'>('chatbot');
+  const upcomingBookingDays = getUpcomingBookingDays(5);
+  const defaultBookingDay = upcomingBookingDays[0]?.formatted || getTodayFormatted();
+  const [selectedBookingDate, setSelectedBookingDate] = useState<string>(defaultBookingDay);
+  const [selectedSlot, setSelectedSlot] = useState<string>('10:00 AM - 11:00 AM (EDT)');
+
+  const reServiceOptions = AI_SERVICE_OPTIONS;
+
+  const handleToggleREService = (label: string) => {
+    if (reForm.services.includes(label)) {
+      setReForm({ ...reForm, services: reForm.services.filter(s => s !== label) });
+    } else {
+      setReForm({ ...reForm, services: [...reForm.services, label] });
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const allREServicesSelected = reServiceOptions.every(s => reForm.services.includes(s.label));
 
-    const fullName = `${formData.firstName} ${formData.lastName}`.trim() || 'Real Estate Client';
-    const selectedDateStr = `${currentMonth.split(' ')[0]} ${selectedDay}, ${currentMonth.split(' ')[1]}`;
-    const serviceName = `Real Estate Client Acquisition (${formData.propertyType})`;
+  const handleToggleAllREServices = () => {
+    if (allREServicesSelected) {
+      setReForm({ ...reForm, services: [] });
+    } else {
+      setReForm({ ...reForm, services: reServiceOptions.map(s => s.label) });
+    }
+  };
+
+  const handleSubmitStep1 = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const firstNameTrim = reForm.firstName.trim();
+    const lastNameTrim = reForm.lastName.trim();
+    const fullName = `${firstNameTrim} ${lastNameTrim}`.trim() || 'Real Estate Client';
+
+    if (!firstNameTrim || !reForm.email.trim()) {
+      return;
+    }
+
+    const selectedDateStr = selectedBookingDate;
 
     const fullMessage = [
-      formData.message ? `Notes: ${formData.message}` : '',
-      `Phone: ${formData.phone || 'Not provided'}`,
-      `Company/Brokerage: ${formData.companyName || 'Not provided'}`,
-      `Property Focus: ${formData.propertyType}`,
-      `Budget: ${formData.budget}`,
+      `Role: ${reForm.reRole}`,
+      `Industry/Niche Market: ${reForm.nicheMarket || 'General Real Estate'}`,
+      `Current Revenue: ${reForm.currentRevenue}`,
+      `90-Day Goal: ${reForm.revenueGoal}`,
+      `Ad Budget: ${reForm.adBudget}`,
+      `Services: ${reForm.services.join(', ') || 'All Services'}`,
+      reForm.projectDescription ? `Project Details: ${reForm.projectDescription}` : '',
       `Scheduled Appointment: ${selectedDateStr} at ${selectedSlot}`
     ].filter(Boolean).join('\n');
 
     const submissionPayload: ContactFormData = {
-      ...formData,
-      service: serviceName,
+      firstName: firstNameTrim,
+      lastName: lastNameTrim,
+      email: reForm.email,
+      phone: reForm.phone || PHONE_NUMBER,
+      companyName: reForm.nicheMarket || 'Real Estate Group',
+      service: `Real Estate Acquisition (${reForm.reRole})`,
+      budget: reForm.adBudget,
+      message: fullMessage,
       selectedDate: selectedDateStr,
       selectedTimeSlot: selectedSlot
     };
 
-    try {
-      // POST to Google Apps Script Webhook
-      await submitToGoogleScript({
-        name: fullName,
-        email: formData.email,
-        message: fullMessage,
-        phone: formData.phone,
-        company: formData.companyName,
-        service: serviceName,
-        budget: formData.budget,
-        date: selectedDateStr,
-        timeSlot: selectedSlot
-      });
+    setSavedLeadData(submissionPayload);
 
-      const wsResult = await scheduleGoogleWorkspaceAppointment(submissionPayload);
-      submissionPayload.workspaceStatus = wsResult;
+    // 1. Store form values in memory (window.storedLeadData = new URLSearchParams(...))
+    const formParams = new URLSearchParams();
+    formParams.append('name', fullName);
+    formParams.append('first_name', firstNameTrim);
+    formParams.append('last_name', lastNameTrim);
+    formParams.append('email', reForm.email);
+    formParams.append('phone', reForm.phone || PHONE_NUMBER);
+    formParams.append('role_description', reForm.reRole);
+    formParams.append('niche_market', reForm.nicheMarket || 'Real Estate');
+    formParams.append('current_revenue', reForm.currentRevenue);
+    formParams.append('revenue_goal_90day', reForm.revenueGoal);
+    formParams.append('monthly_ad_budget', reForm.adBudget);
+    formParams.append('services_interested', reForm.services.join(', ') || 'All Services');
+    formParams.append('project_description', reForm.projectDescription || 'None provided');
+    formParams.append('message', fullMessage);
+    formParams.append('submitted_at', new Date().toISOString());
+
+    window.storedLeadData = formParams;
+
+    // Send immediately to Google Apps Script Webhook in background so lead is always saved
+    try {
+      fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formParams.toString()
+      }).catch((e) => console.warn('Background lead capture note:', e));
     } catch (err) {
-      console.error('Error during real estate booking sync:', err);
-    } finally {
-      setIsSubmitting(false);
-      onFormSubmitted(submissionPayload);
+      console.warn('Dispatch note:', err);
+    }
+
+    // 2. Smoothly transition the view to Step 2 without reloading
+    setReStep(2);
+    const ctaEl = document.getElementById('re-cta');
+    if (ctaEl) {
+      ctaEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleFinalizeREBooking = async () => {
+    setIsSubmitting(true);
+
+    if (window.storedLeadData) {
+      try {
+        await fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: window.storedLeadData.toString()
+        });
+      } catch (err) {
+        console.warn('Sync notice:', err);
+      }
+    }
+
+    if (savedLeadData) {
+      try {
+        await scheduleGoogleWorkspaceAppointment(savedLeadData);
+      } catch (e) {
+        console.warn('Calendar sync notice:', e);
+      }
+    }
+
+    if (onFormSubmitted && savedLeadData) {
+      onFormSubmitted({
+        ...savedLeadData,
+        selectedDate: selectedBookingDate,
+        selectedTimeSlot: selectedSlot
+      });
+    } else {
+      window.location.href = '/thank-you';
     }
   };
 
@@ -164,8 +276,10 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
 
           <div className="flex items-center space-x-4">
             <a
-              href={`tel:${PHONE_NUMBER.replace(/[^0-9]/g, '')}`}
-              className="hidden md:flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-white transition-colors px-3 py-2"
+              href={PHONE_TEL}
+              id="re-header-phone-link"
+              title={`Call ${PHONE_NUMBER}`}
+              className="hidden md:flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-[#9ce2c7] transition-colors px-3 py-2 rounded-full hover:bg-white/5 active:scale-95"
             >
               <Phone className="w-3.5 h-3.5 text-[#9ce2c7]" />
               <span>{PHONE_NUMBER}</span>
@@ -1227,209 +1341,439 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
       <section id="re-cta" className="py-20 md:py-28 bg-[#121212] text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center space-y-4 mb-12">
+          <div className="text-center space-y-4 mb-8">
             <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#9ce2c7]">
               Start Closing More Deals
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white">
               Ready to Close More Deals? <br />
-              <span className="text-[#9ce2c7]">Book a Call Today.</span>
+              <span className="text-[#9ce2c7]">Book Your Real Estate Strategy Call.</span>
             </h2>
             <p className="text-base text-gray-300 max-w-xl mx-auto font-sans">
               Schedule your confidential real estate strategy session to review your current portfolio and build your custom acquisition system.
             </p>
           </div>
 
-          {/* Form container */}
-          <div className="bg-white text-gray-900 rounded-3xl p-6 sm:p-10 shadow-2xl border border-gray-100">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              
-              {/* Name Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">First Name *</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    required
-                    placeholder="Deon"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Last Name *</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    required
-                    placeholder="Howard"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
-                  />
-                </div>
-              </div>
+          {/* 2-Step Progress Indicator */}
+          <div className="max-w-md mx-auto mb-8 bg-white/5 p-1.5 rounded-full border border-white/10 flex items-center justify-between">
+            <div 
+              className={`flex-1 py-2 px-4 rounded-full text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2 transition-all ${
+                reStep === 1 
+                  ? 'bg-[#9ce2c7] text-black shadow-md' 
+                  : 'text-gray-400 hover:text-white cursor-pointer'
+              }`}
+              onClick={() => setReStep(1)}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${reStep === 1 ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>
+                1
+              </span>
+              <span>1. Qualification</span>
+            </div>
 
-              {/* Contact Info Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Email Address *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    placeholder="name@realestate.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Phone Number *</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    required
-                    placeholder="(555) 000-0000"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
-                  />
-                </div>
-              </div>
+            <div className={`flex-1 py-2 px-4 rounded-full text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2 transition-all ${
+              reStep === 2 
+                ? 'bg-[#9ce2c7] text-black shadow-md' 
+                : 'text-gray-400'
+            }`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${reStep === 2 ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>
+                2
+              </span>
+              <span>2. Schedule Time</span>
+            </div>
+          </div>
 
-              {/* Company & Property Focus Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Brokerage / Group Name</label>
-                  <input
-                    type="text"
-                    name="companyName"
-                    placeholder="Axiom Real Estate Group"
-                    value={formData.companyName}
-                    onChange={handleChange}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
-                  />
+          {/* STEP 1: REAL ESTATE QUALIFICATION FORM */}
+          {reStep === 1 && (
+            <div className="bg-white text-gray-900 rounded-3xl p-6 sm:p-10 shadow-2xl border border-gray-100 animate-fade-in">
+              <form onSubmit={handleSubmitStep1} className="space-y-6">
+                
+                {/* First Name & Last Name Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                      <User className="w-3.5 h-3.5 text-gray-500" />
+                      <span>First Name *</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Deon"
+                      value={reForm.firstName}
+                      onChange={(e) => setReForm({ ...reForm, firstName: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                      <User className="w-3.5 h-3.5 text-gray-500" />
+                      <span>Last Name *</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Howard"
+                      value={reForm.lastName}
+                      onChange={(e) => setReForm({ ...reForm, lastName: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
+                    />
+                  </div>
                 </div>
+
+                {/* Email & Phone Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                      <Mail className="w-3.5 h-3.5 text-gray-500" />
+                      <span>Email Address *</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="deon@brokerage.com"
+                      value={reForm.email}
+                      onChange={(e) => setReForm({ ...reForm, email: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                      <Phone className="w-3.5 h-3.5 text-gray-500" />
+                      <span>Phone Number</span>
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="(555) 000-0000"
+                      value={reForm.phone}
+                      onChange={(e) => setReForm({ ...reForm, phone: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Which Best Describes You? */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Primary Focus</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                    <Building2 className="w-3.5 h-3.5 text-gray-500" />
+                    <span>Which best describes you?</span>
+                  </label>
                   <select
-                    name="propertyType"
-                    value={formData.propertyType}
-                    onChange={handleChange}
+                    value={reForm.reRole}
+                    onChange={(e) => setReForm({ ...reForm, reRole: e.target.value })}
                     className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
                   >
-                    <option value="Residential Rentals">Residential Rentals</option>
-                    <option value="Residential Sales">Residential Sales</option>
-                    <option value="Commercial Developments">Commercial Developments</option>
-                    <option value="Wholesaling & Flipping">Wholesaling & Flipping</option>
-                    <option value="Residential & Commercial">Residential & Commercial</option>
+                    <option value="Solo Agent / Broker">Solo Agent / Broker</option>
+                    <option value="Short Term / Long Term Property Managers">Short Term / Long Term Property Managers</option>
+                    <option value="Master Brokerages & Sales Teams">Master Brokerages & Sales Teams</option>
+                    <option value="Real Estate Developers">Real Estate Developers</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
-              </div>
 
-              {/* Budget Row */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Target Monthly Ad Spend</label>
-                <select
-                  name="budget"
-                  value={formData.budget}
-                  onChange={handleChange}
-                  className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
+                {/* Industry / Niche Market & Average Current Monthly Revenue */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                      <Layers className="w-3.5 h-3.5 text-gray-500" />
+                      <span>Industry / Niche Market</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Luxury Residential, Commercial, Multi-family"
+                      value={reForm.nicheMarket}
+                      onChange={(e) => setReForm({ ...reForm, nicheMarket: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                      <DollarSign className="w-3.5 h-3.5 text-gray-500" />
+                      <span>Average Current Monthly Revenue</span>
+                    </label>
+                    <select
+                      value={reForm.currentRevenue}
+                      onChange={(e) => setReForm({ ...reForm, currentRevenue: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
+                    >
+                      <option value="Under $10k / mo">Under $10k / mo</option>
+                      <option value="$10k - $25k / mo">$10k - $25k / mo</option>
+                      <option value="$25k - $50k / mo">$25k - $50k / mo</option>
+                      <option value="$50k - $100k / mo">$50k - $100k / mo</option>
+                      <option value="$100k+ / mo">$100k+ / mo</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 90-Day Revenue Goal & Projected Monthly Ad Budget */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                      <TrendingUp className="w-3.5 h-3.5 text-gray-500" />
+                      <span>90-Day Revenue Goal</span>
+                    </label>
+                    <select
+                      value={reForm.revenueGoal}
+                      onChange={(e) => setReForm({ ...reForm, revenueGoal: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
+                    >
+                      <option value="Under $10k">Under $10k</option>
+                      <option value="$10k - $25k">$10k - $25k</option>
+                      <option value="$25k - $50k">$25k - $50k</option>
+                      <option value="$50k - $100k">$50k - $100k</option>
+                      <option value="$100k+">$100k+</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                      <Target className="w-3.5 h-3.5 text-gray-500" />
+                      <span>Projected Monthly Ad Budget</span>
+                    </label>
+                    <select
+                      value={reForm.adBudget}
+                      onChange={(e) => setReForm({ ...reForm, adBudget: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none cursor-pointer"
+                    >
+                      <option value="Under $1.5k">Under $1.5k</option>
+                      <option value="$1.5k - $5k">$1.5k - $5k</option>
+                      <option value="$5k - $10k">$5k - $10k</option>
+                      <option value="$10k+">$10k+</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Services Interested In Checkboxes with All of the Above */}
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Services Interested In:
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleToggleAllREServices}
+                      className="inline-flex items-center space-x-1 text-xs font-bold text-black py-0.5 px-2 bg-gray-100 hover:bg-gray-200 rounded cursor-pointer"
+                    >
+                      {allREServicesSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5 text-gray-400" />}
+                      <span>All of the Above</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {reServiceOptions.map((srv) => {
+                      const isChecked = reForm.services.includes(srv.label);
+                      return (
+                        <label
+                          key={srv.id}
+                          onClick={() => handleToggleREService(srv.label)}
+                          className={`flex items-center space-x-2.5 p-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all ${
+                            isChecked
+                              ? 'bg-black text-white border-black'
+                              : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border ${
+                            isChecked ? 'bg-[#9ce2c7] border-[#9ce2c7] text-black' : 'border-gray-300 bg-white'
+                          }`}>
+                            {isChecked && <Check className="w-2.5 h-2.5 text-black stroke-[3]" />}
+                          </div>
+                          <span className="truncate">{srv.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Space to describe project */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
+                    <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
+                    <span>Space to Describe Project & Listings Goals</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Tell us about your active listings, target zip codes, average commission per deal, and goals..."
+                    value={reForm.projectDescription}
+                    onChange={(e) => setReForm({ ...reForm, projectDescription: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-medium text-gray-900 outline-none resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  id="re-cta-submit-btn"
+                  className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-lg transition-all cursor-pointer border border-white/20 transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
                 >
-                  <option value="Under $2,500/mo">Under $2,500/mo</option>
-                  <option value="$2,500 - $5,000/mo">$2,500 - $5,000/mo</option>
-                  <option value="$5,000 - $10,000/mo">$5,000 - $10,000/mo</option>
-                  <option value="$10,000+/mo">$10,000+/mo</option>
-                </select>
+                  <span>Next: Select Date & Time</span>
+                  <ArrowRight className="w-4 h-4 text-[#9ce2c7]" />
+                </button>
+
+              </form>
+            </div>
+          )}
+
+          {/* STEP 2: EMBEDDED REAL ESTATE CALENDAR SCHEDULER */}
+          {reStep === 2 && (
+            <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-2xl border-2 border-[#a3e6cd]/60 space-y-6 animate-fade-in text-gray-900">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-100 gap-4">
+                <div>
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#0e6245] bg-[#a3e6cd]/30 px-3 py-1 rounded-full border border-[#a3e6cd]">
+                    Step 2 of 2 • Real Estate Consultation
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
+                    Select Your Real Estate Strategy Session Time
+                  </h3>
+                  <p className="text-xs font-medium text-gray-600 mt-1">
+                    1. Pick a date & time in the calendar below. 2. Once confirmed, click <strong>"I've Completed My Booking"</strong>.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    id="re-top-finalize-booking-btn"
+                    onClick={handleFinalizeREBooking}
+                    disabled={isSubmitting}
+                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-950 hover:text-black py-2.5 px-4 rounded-full bg-[#a3e6cd] hover:bg-[#8ee0c1] border border-[#7ed4b4] cursor-pointer transition-all shadow-sm disabled:opacity-75"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Clock className="w-3.5 h-3.5 animate-spin" />
+                        <span>Redirecting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5 text-[#0e6245]" />
+                        <span>I've Booked My Slot</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href={GOOGLE_CALENDAR_APPOINTMENT_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-700 hover:text-gray-900 py-2.5 px-4 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 cursor-pointer transition-all shadow-sm"
+                  >
+                    <span>New Tab</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+
+                  <a
+                    href={PHONE_TEL}
+                    id="re-step2-call-btn"
+                    title={`Call ${PHONE_NUMBER}`}
+                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#0e6245] hover:text-black py-2.5 px-4 rounded-full bg-[#f0fbf6] hover:bg-[#a3e6cd]/40 border border-[#a3e6cd] cursor-pointer transition-all shadow-sm active:scale-95"
+                  >
+                    <Phone className="w-3.5 h-3.5 text-[#0e6245]" />
+                    <span>Call {PHONE_NUMBER}</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => setReStep(1)}
+                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 py-2.5 px-3 rounded-full bg-transparent hover:bg-gray-100 border border-gray-200 cursor-pointer transition-all"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Edit Info</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Message */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Tell Us About Your Listings & Goals</label>
-                <textarea
-                  name="message"
-                  rows={3}
-                  placeholder="Share details about your active properties, target locations, or key sales goals..."
-                  value={formData.message}
-                  onChange={handleChange}
-                  className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none font-sans resize-none"
-                ></textarea>
-              </div>
-
-              {/* Calendar Selector */}
-              <div className="pt-6 border-t border-gray-200">
-                <h4 className="text-base font-bold text-gray-900 mb-3 flex items-center space-x-2">
-                  <CalendarIcon className="w-5 h-5 text-black" />
-                  <span>Select Date & Time for Strategy Call</span>
-                </h4>
-
-                <div className="bg-[#d6f5e8]/60 rounded-2xl p-5 border border-black/15 space-y-4">
-                  <div className="flex items-center justify-between text-[#121212]">
-                    <span className="font-bold text-sm">{currentMonth}</span>
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-600">EDT Timezone</span>
+              {/* Call Expectations Banner */}
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-gray-900">
+                  <Sparkles className="w-4 h-4 text-[#0e6245]" />
+                  <span>What to Expect From Your Real Estate Strategy Call:</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-gray-700">
+                  <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-xs">
+                    <span className="font-bold text-[#0e6245] block mb-0.5">1. Market & Pipeline Audit</span>
+                    <span className="text-gray-600">Analyze buyer/seller demographics, current MLS listings, and cost per lead.</span>
                   </div>
-
-                  <div className="grid grid-cols-7 gap-1 text-center">
-                    {daysInMonth.slice(0, 14).map((day) => (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => setSelectedDay(day)}
-                        className={`py-2 rounded-xl text-xs font-bold transition-all ${
-                          selectedDay === day
-                            ? 'bg-black text-white shadow-md'
-                            : 'hover:bg-black/10 text-gray-800'
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    ))}
+                  <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-xs">
+                    <span className="font-bold text-[#0e6245] block mb-0.5">2. AI Lead Qualification System</span>
+                    <span className="text-gray-600">Custom Google PPC + 24/7 AI chatbot blueprint for instant tour bookings.</span>
                   </div>
-
-                  {/* Time slots */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2">
-                    {displaySlots.map((slot) => (
-                      <button
-                        key={slot}
-                        type="button"
-                        onClick={() => setSelectedSlot(slot)}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
-                          selectedSlot === slot
-                            ? 'bg-black text-white border-black'
-                            : 'bg-white text-gray-800 border-gray-200 hover:border-black'
-                        }`}
-                      >
-                        {slot}
-                      </button>
-                    ))}
+                  <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-xs">
+                    <span className="font-bold text-[#0e6245] block mb-0.5">3. Clear Strategy & Action Steps</span>
+                    <span className="text-gray-600">They will leave the call with a clear strategy and action steps.</span>
                   </div>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                id="re-cta-submit-btn"
-                disabled={isSubmitting}
-                className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-lg transition-all cursor-pointer border border-white/20 transform hover:-translate-y-0.5 disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-[#9ce2c7]" />
-                    <span>Booking Appointment & Syncing Calendar...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 text-[#9ce2c7]" />
-                    <span>Confirm & Book Strategy Session</span>
-                  </>
-                )}
-              </button>
+              {/* Instruction Notice Banner */}
+              <div className="bg-[#f0fbf6] border border-[#a3e6cd] rounded-xl p-3.5 flex items-center justify-between text-xs text-[#0e6245] font-medium">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4 text-[#0e6245] shrink-0" />
+                  <span>Select your 30-minute real estate consultation slot on the calendar:</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleFinalizeREBooking}
+                  className="hidden sm:inline-flex items-center space-x-1 text-[11px] font-bold uppercase tracking-wider text-black underline hover:text-[#0e6245] cursor-pointer"
+                >
+                  <span>Finished? Click to redirect</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
 
-            </form>
-          </div>
+              {/* Google Calendar Appointment Scheduler Container (100% width, min 720px height, 12px border-radius) */}
+              <div 
+                className="w-full min-h-[720px] bg-white border border-gray-200 overflow-hidden relative shadow-sm"
+                style={{ width: '100%', minHeight: '720px', borderRadius: '12px' }}
+              >
+                <iframe
+                  src={GOOGLE_CALENDAR_EMBED_URL}
+                  style={{ border: 0, width: '100%', minHeight: '720px', borderRadius: '12px' }}
+                  width="100%"
+                  height="720px"
+                  frameBorder="0"
+                  title="Schedule Real Estate Strategy Session with Deon Howard"
+                  className="w-full min-h-[720px] h-[720px] border-0 bg-white"
+                />
+              </div>
+
+              {/* Prominent Bottom Confirmation Bar */}
+              <div className="bg-[#121212] text-white p-6 sm:p-8 rounded-2xl border-2 border-[#a3e6cd] shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-center sm:justify-start space-x-2 text-[#9ce2c7] text-xs font-bold uppercase tracking-wider">
+                    <CheckCircle className="w-4 h-4 text-[#9ce2c7]" />
+                    <span>Real Estate Session Scheduling</span>
+                  </div>
+                  <h4 className="text-lg sm:text-xl font-bold text-white">
+                    Done Choosing Your Real Estate Consultation Slot?
+                  </h4>
+                  <p className="text-xs text-gray-300">
+                    Click below to finalize your booking and proceed to your confirmed briefing page.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  id="re-bottom-finalize-booking-btn"
+                  onClick={handleFinalizeREBooking}
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Clock className="w-4 h-4 animate-spin text-black" />
+                      <span>Redirecting to Confirmation...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>I've Completed My Booking → Continue</span>
+                      <ArrowRight className="w-4 h-4 stroke-[3]" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </div>
+          )}
 
         </div>
       </section>

@@ -67,7 +67,46 @@ export default function App() {
     document.title = getPageTitle(initialMatched, initialIsThanks);
 
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+
+    // Global listener for Google Calendar Appointment scheduling iframe events
+    const handleCalendarMessage = (e: MessageEvent) => {
+      if (e.origin && (e.origin.includes('calendar.google.com') || e.origin.includes('calendar.app.google'))) {
+        console.log('📅 Google Calendar appointment scheduled event received:', e.data);
+        if (window.storedLeadData) {
+          fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: window.storedLeadData.toString()
+          }).finally(() => {
+            setIsThankYouView(true);
+            try {
+              window.history.pushState({ page: 'thank-you' }, '', '/thank-you');
+            } catch {
+              window.location.href = '/thank-you';
+            }
+            document.title = getPageTitle(null, true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        } else {
+          setIsThankYouView(true);
+          try {
+            window.history.pushState({ page: 'thank-you' }, '', '/thank-you');
+          } catch {
+            window.location.href = '/thank-you';
+          }
+          document.title = getPageTitle(null, true);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    };
+
+    window.addEventListener('message', handleCalendarMessage);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('message', handleCalendarMessage);
+    };
   }, []);
 
   const handleBookClick = () => {

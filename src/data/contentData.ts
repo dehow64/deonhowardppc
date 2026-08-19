@@ -1,7 +1,10 @@
 import { IndustryItem, ServiceItem, ProcessStep, CaseStudy } from '../types';
 
 export const PHONE_NUMBER = "(708) 669-6410";
+export const PHONE_TEL = "tel:+17086696410";
 export const EMAIL_ADDRESS = "info@deonhowardppc.com";
+export const GOOGLE_CALENDAR_APPOINTMENT_URL = "https://calendar.app.google/yBNtM5uPKc7rv5bT7";
+export const GOOGLE_CALENDAR_EMBED_URL = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ2EWkPewPj9fewcHQgiC1u5VM16JJ0C6N7CZoxcTfK3GV9L0M0PE-TciWdua6mD_v1WwiplMlJZ?gv=true";
 
 // Deon Howard Portrait image stored in local /public/images/ directory
 export const DEON_PORTRAIT = "/images/DH%20PPC.png";
@@ -159,6 +162,13 @@ export const SERVICES_DATA: ServiceItem[] = [
     iconName: 'BarChart3',
     description: 'Gain absolute clarity on your marketing performance with advanced reporting and predictive revenue attribution. We implement privacy-compliant server-side tracking and custom dashboards that connect every dollar spent directly to booked appointments, closed sales, and true bottom-line ROI.'
   }
+];
+
+export const AI_SERVICE_OPTIONS = [
+  { id: 'automated-funnels', label: 'Automated Conversion Funnels (AI Websites & Landing Pages)' },
+  { id: 'ai-customer-acquisition', label: 'AI Customer Acquisition Systems (Google & Meta Paid Ads)' },
+  { id: 'marketing-automation', label: 'AI Marketing Automation Tools (Agents, Workflows & Chatbots)' },
+  { id: 'predictive-analytics', label: 'Predictive Attribution Systems (Server-Side CAPI & ROI Analytics)' }
 ];
 
 export const PROCESS_STEPS: ProcessStep[] = [

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PHONE_NUMBER, EMAIL_ADDRESS, INDUSTRIES_DATA } from '../data/contentData';
+import { PHONE_NUMBER, PHONE_TEL, EMAIL_ADDRESS, INDUSTRIES_DATA } from '../data/contentData';
 import { Phone, Mail, ArrowUp, ChevronRight } from 'lucide-react';
 import { getPathForIndustry } from '../utils/routes';
 
@@ -54,11 +54,14 @@ export const Footer: React.FC<FooterProps> = ({ onSelectIndustry }) => {
             <div className="space-y-3">
               <div>
                 <a
-                  href={`tel:${PHONE_NUMBER.replace(/[^0-9]/g, '')}`}
+                  href={PHONE_TEL}
                   id="footer-phone-link"
-                  className="inline-flex items-center space-x-2 text-lg font-bold text-[#9ce2c7] hover:underline"
+                  title={`Call ${PHONE_NUMBER}`}
+                  className="inline-flex items-center space-x-2.5 text-lg font-bold text-[#9ce2c7] hover:text-[#8bd6ba] hover:underline transition-colors active:scale-95"
                 >
-                  <Phone className="w-4 h-4 text-[#9ce2c7]" />
+                  <div className="w-8 h-8 rounded-full bg-[#9ce2c7]/20 flex items-center justify-center border border-[#9ce2c7]/30">
+                    <Phone className="w-4 h-4 text-[#9ce2c7]" />
+                  </div>
                   <span>{PHONE_NUMBER}</span>
                 </a>
               </div>

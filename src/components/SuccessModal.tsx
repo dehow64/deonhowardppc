@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle2, Calendar, Clock, X, Mail, ExternalLink, ShieldCheck } from 'lucide-react';
 import { ContactFormData } from '../types';
 import { TARGET_ADMIN_EMAIL } from '../services/googleWorkspace';
+import { getTodayFormatted } from '../utils/dateUtils';
 
 interface SuccessModalProps {
   data: ContactFormData | null;
@@ -51,7 +52,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({ data, onClose }) => 
             </div>
             <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full">1-on-1 Call</span>
           </div>
-          <p><span className="font-bold text-gray-900">Date:</span> {data.selectedDate || 'August 6, 2026'}</p>
+          <p><span className="font-bold text-gray-900">Date:</span> {data.selectedDate || getTodayFormatted()}</p>
           <p><span className="font-bold text-gray-900">Time Slot:</span> {data.selectedTimeSlot || '10:00 AM - 11:00 AM (EDT)'}</p>
           <p><span className="font-bold text-gray-900">Service:</span> {data.service}</p>
           <p><span className="font-bold text-gray-900">Client Email:</span> {data.email}</p>

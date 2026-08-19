@@ -44,12 +44,14 @@ export interface ContactFormData {
   lastName: string;
   email: string;
   phone: string;
+  website?: string;
+  industry?: string;
   companyName: string;
   service: string;
   budget: string;
   message: string;
-  selectedDate: string;
-  selectedTimeSlot: string;
+  selectedDate?: string;
+  selectedTimeSlot?: string;
   propertyType?: string;
   workspaceStatus?: {
     calendarCreated: boolean;
@@ -60,4 +62,10 @@ export interface ContactFormData {
     serverSaved: boolean;
     errorDetails?: string;
   };
+}
+
+declare global {
+  interface Window {
+    storedLeadData?: URLSearchParams;
+  }
 }

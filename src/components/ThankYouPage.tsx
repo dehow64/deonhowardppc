@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 import { ContactFormData } from '../types';
 import { TARGET_ADMIN_EMAIL } from '../services/googleWorkspace';
-import { PHONE_NUMBER } from '../data/contentData';
+import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
+import { getTodayFormatted } from '../utils/dateUtils';
 
 interface ThankYouPageProps {
   data: ContactFormData | null;
@@ -79,7 +80,7 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
   }, [data]);
 
   const clientName = data?.firstName ? `${data.firstName} ${data.lastName}`.trim() : 'Valued Client';
-  const displayDate = data?.selectedDate || 'August 6, 2026';
+  const displayDate = data?.selectedDate || getTodayFormatted();
   const displayTime = data?.selectedTimeSlot || '10:00 AM - 11:00 AM (EDT)';
   const displayService = data?.service || 'Custom Marketing Automation & PPC Growth System';
   const displayEmail = data?.email || 'Your provided email';
@@ -157,7 +158,7 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
           </div>
 
           <div className="text-xs font-bold uppercase tracking-[0.3em] text-[#9ce2c7]">
-            Booking Confirmed • Route: /thank-you
+            Booking Confirmed
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
@@ -165,7 +166,7 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
           </h1>
 
           <p className="text-base sm:text-lg text-gray-300 max-w-xl mx-auto font-sans leading-relaxed">
-            Your 1-on-1 Strategy Consultation has been scheduled and recorded. Deon Howard will personally review your business model prior to the call.
+            Your 1-on-1 Strategy Consultation has been scheduled and recorded. We will review your information prior to the call.
           </p>
         </div>
 
@@ -217,17 +218,24 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
             <div className="bg-black/40 p-4 rounded-2xl border border-white/5 space-y-1">
               <div className="flex items-center space-x-2 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#9ce2c7]" />
-                <span>Meeting Host & Direct Route</span>
+                <span>Meeting Host</span>
               </div>
-              <p className="text-sm font-bold text-white truncate">{TARGET_ADMIN_EMAIL}</p>
+              <p className="text-base font-bold text-white">Deon Howard</p>
             </div>
           </div>
 
-          {/* Selected Service & Company */}
-          <div className="bg-black/40 p-4 rounded-2xl border border-white/5 space-y-1 text-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-              Focus Area / Service:
-            </span>
+          {/* Selected Service, Industry, Website & Company */}
+          <div className="bg-black/40 p-4 rounded-2xl border border-white/5 space-y-2 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                Focus Area / Service:
+              </span>
+              {data?.website && (
+                <span className="text-[11px] text-gray-300 font-mono">
+                  Website: <span className="text-[#9ce2c7] underline">{data.website}</span>
+                </span>
+              )}
+            </div>
             <p className="text-sm font-semibold text-[#9ce2c7]">
               {displayService} {data?.companyName ? `• ${data.companyName}` : ''}
             </p>
@@ -273,17 +281,17 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-gray-300">
-            <div className="space-y-1">
-              <span className="font-bold text-[#9ce2c7]">1. Email Notification</span>
-              <p>A confirmation email and Google Meet link have been sent to your inbox.</p>
+            <div className="space-y-1 bg-black/30 p-4 rounded-2xl border border-white/5">
+              <span className="font-bold text-[#9ce2c7] text-sm block">1. Email Notification</span>
+              <p className="text-gray-300 leading-relaxed">A confirmation email and Google Meet link have been sent to your inbox.</p>
             </div>
-            <div className="space-y-1">
-              <span className="font-bold text-[#9ce2c7]">2. Audit Preparation</span>
-              <p>Deon will audit your ad account or website structure prior to the call.</p>
+            <div className="space-y-1 bg-black/30 p-4 rounded-2xl border border-white/5">
+              <span className="font-bold text-[#9ce2c7] text-sm block">2. Audit Preparation</span>
+              <p className="text-gray-300 leading-relaxed">We will review your information prior to the call.</p>
             </div>
-            <div className="space-y-1">
-              <span className="font-bold text-[#9ce2c7]">3. Strategy Blueprint</span>
-              <p>During the session, you'll walk away with an actionable growth blueprint.</p>
+            <div className="space-y-1 bg-black/30 p-4 rounded-2xl border border-white/5">
+              <span className="font-bold text-[#9ce2c7] text-sm block">3. Clear Strategy & Action Steps</span>
+              <p className="text-gray-300 leading-relaxed">They will leave the call with a clear strategy and action steps.</p>
             </div>
           </div>
         </div>
@@ -299,10 +307,12 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
           </button>
 
           <a
-            href={`tel:${PHONE_NUMBER.replace(/[^0-9]/g, '')}`}
-            className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider py-4 px-6 rounded-full transition-all border border-white/15 text-center flex items-center justify-center space-x-2"
+            href={PHONE_TEL}
+            id="thankyou-phone-btn"
+            title={`Call ${PHONE_NUMBER}`}
+            className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider py-4 px-6 rounded-full transition-all border border-white/15 text-center flex items-center justify-center space-x-2 cursor-pointer active:scale-95 shadow-md"
           >
-            <Phone className="w-3.5 h-3.5 text-[#9ce2c7]" />
+            <Phone className="w-3.5 h-3.5 text-[#9ce2c7] fill-current" />
             <span>Call Urgent Questions: {PHONE_NUMBER}</span>
           </a>
         </div>
