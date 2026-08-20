@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, Menu, X, Calendar, ChevronUp, ChevronDown, ArrowUp, ArrowDown, Compass } from 'lucide-react';
+import { Phone, Menu, X, Calendar, ChevronUp, ChevronDown, ArrowUp, ArrowDown, Compass, Check } from 'lucide-react';
 import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
+import { handlePhoneCall } from '../utils/phone';
 
 interface HeaderProps {
   onBookClick: () => void;
@@ -11,6 +12,15 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [scrolled, setScrolled] = useState(false);
+  const [phoneClicked, setPhoneClicked] = useState(false);
+
+  const handlePhoneClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setPhoneClicked(true);
+    handlePhoneCall(e);
+    setTimeout(() => {
+      setPhoneClicked(false);
+    }, 4500);
+  };
 
   const navLinks = [
     { label: 'Home', href: '#home', num: '01' },
@@ -115,11 +125,25 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
             <a
               href={PHONE_TEL}
               id="header-phone-link"
+              onClick={handlePhoneClick}
               title={`Call ${PHONE_NUMBER}`}
-              className="hidden sm:flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider text-[#131d17] hover:text-black transition-colors px-3 py-2 rounded-full hover:bg-black/10 active:scale-95"
+              className={`hidden sm:inline-flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer ${
+                phoneClicked
+                  ? 'bg-white text-black px-3.5 py-1.5 rounded-full shadow-md border border-[#9ce2c7] ring-2 ring-[#9ce2c7]/40'
+                  : 'text-[#131d17] hover:text-black px-2.5 py-2 hover:bg-black/5 rounded-full'
+              }`}
             >
-              <Phone className="w-3.5 h-3.5 text-black" />
+              {phoneClicked ? (
+                <Check className="w-3.5 h-3.5 text-[#0d4f36] animate-in zoom-in-75" />
+              ) : (
+                <Phone className="w-3.5 h-3.5 text-[#131d17]" />
+              )}
               <span>{PHONE_NUMBER}</span>
+              {phoneClicked && (
+                <span className="ml-1 text-[10px] font-extrabold bg-[#9ce2c7] text-[#0d4f36] px-1.5 py-0.5 rounded-full">
+                  Dialing
+                </span>
+              )}
             </a>
 
             <button
@@ -302,8 +326,12 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                 <a
                   href={PHONE_TEL}
                   id="mobile-drawer-phone-btn"
+                  onClick={(e) => {
+                    handlePhoneCall(e);
+                    setMenuOpen(false);
+                  }}
                   title={`Call ${PHONE_NUMBER}`}
-                  className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-black bg-[#9ce2c7] hover:bg-[#8bd6ba] py-3 px-4 rounded-full transition-all shadow-md active:scale-95"
+                  className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-black bg-[#9ce2c7] hover:bg-[#8bd6ba] py-3 px-4 rounded-full transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   <Phone className="w-4 h-4 text-black fill-current" />
                   <span>Call {PHONE_NUMBER}</span>

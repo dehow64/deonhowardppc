@@ -155,9 +155,74 @@ export const isThankYouPage = (pathname: string = window.location.pathname, hash
   return false;
 };
 
-export const getPageTitle = (industryId: string | null, isThanks: boolean = false): string => {
+export const isPrivacyPolicyPage = (pathname: string = window.location.pathname, hash: string = window.location.hash): boolean => {
+  if (typeof window === 'undefined') return false;
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const pParam = searchParams.get('p') || searchParams.get('path') || searchParams.get('page');
+  if (pParam) {
+    const clean = pParam.toLowerCase().replace(/^\/+|\/+$/g, '');
+    if (['privacy-policy', 'privacy', 'privacypolicy', 'privacy-policy.html'].includes(clean)) {
+      return true;
+    }
+  }
+
+  const cleanPath = pathname.toLowerCase().replace(/^\/+|\/+$/g, '');
+  if (['privacy-policy', 'privacy', 'privacypolicy', 'privacy-policy.html'].includes(cleanPath)) {
+    return true;
+  }
+
+  if (hash) {
+    const cleanHash = hash.replace(/^#\/?/, '').toLowerCase().replace(/^\/+|\/+$/g, '');
+    if (['privacy-policy', 'privacy', 'privacypolicy', 'privacy-policy.html'].includes(cleanHash)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const isAccessibilityPage = (pathname: string = window.location.pathname, hash: string = window.location.hash): boolean => {
+  if (typeof window === 'undefined') return false;
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const pParam = searchParams.get('p') || searchParams.get('path') || searchParams.get('page');
+  if (pParam) {
+    const clean = pParam.toLowerCase().replace(/^\/+|\/+$/g, '');
+    if (['accessibility-statement', 'accessibility', 'accessibilitystatement', 'accessibility-statement.html'].includes(clean)) {
+      return true;
+    }
+  }
+
+  const cleanPath = pathname.toLowerCase().replace(/^\/+|\/+$/g, '');
+  if (['accessibility-statement', 'accessibility', 'accessibilitystatement', 'accessibility-statement.html'].includes(cleanPath)) {
+    return true;
+  }
+
+  if (hash) {
+    const cleanHash = hash.replace(/^#\/?/, '').toLowerCase().replace(/^\/+|\/+$/g, '');
+    if (['accessibility-statement', 'accessibility', 'accessibilitystatement', 'accessibility-statement.html'].includes(cleanHash)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+export const getPageTitle = (
+  industryId: string | null, 
+  isThanks: boolean = false, 
+  isPrivacy: boolean = false, 
+  isAccessibility: boolean = false
+): string => {
   if (isThanks) {
     return 'Thank You - Strategy Session Confirmed | Deon Howard PPC';
+  }
+  if (isPrivacy) {
+    return 'Privacy Policy | Deon Howard PPC';
+  }
+  if (isAccessibility) {
+    return 'Accessibility Statement | Deon Howard PPC';
   }
   if (!industryId) {
     return 'Deon Howard PPC - Digital Marketing & Growth Agency';

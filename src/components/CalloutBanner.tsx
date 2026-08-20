@@ -1,5 +1,6 @@
 import React from 'react';
 import { CALLOUT_PHONE_IMG, PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
+import { handlePhoneCall } from '../utils/phone';
 import { Phone } from 'lucide-react';
 import { AnimatedImage } from './AnimatedImage';
 import { motion } from 'motion/react';
@@ -46,6 +47,7 @@ export const CalloutBanner: React.FC = () => {
           <a
             href={PHONE_TEL}
             id="callout-phone-btn"
+            onClick={handlePhoneCall}
             title={`Call ${PHONE_NUMBER}`}
             className="inline-flex items-center space-x-3 bg-[#9ce2c7] hover:bg-[#8ee0c1] text-black font-extrabold uppercase tracking-widest text-xs px-8 py-4 rounded-full shadow-xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 active:translate-y-0"
           >

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Clock, ChevronRight, Sparkles, Phone } from 'lucide-react';
 import { getUpcomingBookingDays, getCurrentWeekRangeLabel, getTodayFormatted } from '../utils/dateUtils';
 import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
+import { handlePhoneCall } from '../utils/phone';
 
 interface HeroProps {
   onBookClick: (initialDate?: string, initialSlot?: string) => void;
@@ -213,8 +214,9 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
                     <a
                       href={PHONE_TEL}
                       id="hero-direct-phone-btn"
+                      onClick={handlePhoneCall}
                       title={`Call ${PHONE_NUMBER}`}
-                      className="inline-flex items-center space-x-1 uppercase tracking-wider hover:underline text-[#131d17] hover:text-black transition-colors active:scale-95"
+                      className="inline-flex items-center space-x-1.5 uppercase tracking-wider text-[#131d17] hover:text-black font-bold text-[11px] bg-black/5 hover:bg-black/10 px-2.5 py-1 rounded-full transition-all active:scale-95 cursor-pointer"
                     >
                       <Phone className="w-3 h-3 text-black" />
                       <span>Call {PHONE_NUMBER}</span>

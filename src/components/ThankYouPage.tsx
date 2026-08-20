@@ -14,6 +14,7 @@ import {
 import { ContactFormData } from '../types';
 import { TARGET_ADMIN_EMAIL, scheduleGoogleWorkspaceAppointment } from '../services/googleWorkspace';
 import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
+import { handlePhoneCall } from '../utils/phone';
 import { getTodayFormatted } from '../utils/dateUtils';
 
 interface ThankYouPageProps {
@@ -408,6 +409,7 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
           <a
             href={PHONE_TEL}
             id="thankyou-phone-btn"
+            onClick={handlePhoneCall}
             title={`Call ${PHONE_NUMBER}`}
             className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider py-4 px-6 rounded-full transition-all border border-white/15 text-center flex items-center justify-center space-x-2 cursor-pointer active:scale-95 shadow-md"
           >
@@ -420,7 +422,41 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
 
       {/* Footer */}
       <footer className="border-t border-white/10 py-8 text-center text-xs text-gray-500">
-        <p>© 2026 Deon Howard PPC • Automated Marketing Systems</p>
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>© 2026 Deon Howard PPC • Automated Marketing Systems</p>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onBackToMain}
+              className="text-xs text-gray-500 hover:text-[#9ce2c7] underline cursor-pointer"
+            >
+              Main Site
+            </button>
+            <span className="text-gray-700">•</span>
+            <a
+              href="/privacy-policy"
+              onClick={(e) => {
+                e.preventDefault();
+                window.history.pushState(null, '', '/privacy-policy');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+              className="text-xs text-gray-500 hover:text-[#9ce2c7] underline cursor-pointer"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-gray-700">•</span>
+            <a
+              href="/accessibility-statement"
+              onClick={(e) => {
+                e.preventDefault();
+                window.history.pushState(null, '', '/accessibility-statement');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+              className="text-xs text-gray-500 hover:text-[#9ce2c7] underline cursor-pointer"
+            >
+              Accessibility Statement
+            </a>
+          </div>
+        </div>
       </footer>
 
     </div>

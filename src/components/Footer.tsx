@@ -1,13 +1,20 @@
 import React from 'react';
 import { PHONE_NUMBER, PHONE_TEL, EMAIL_ADDRESS, INDUSTRIES_DATA } from '../data/contentData';
+import { handlePhoneCall } from '../utils/phone';
 import { Phone, Mail, ArrowUp, ChevronRight } from 'lucide-react';
 import { getPathForIndustry } from '../utils/routes';
 
 interface FooterProps {
   onSelectIndustry?: (industryId: string) => void;
+  onSelectPrivacy?: () => void;
+  onSelectAccessibility?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onSelectIndustry }) => {
+export const Footer: React.FC<FooterProps> = ({ 
+  onSelectIndustry,
+  onSelectPrivacy,
+  onSelectAccessibility
+}) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -21,8 +28,16 @@ export const Footer: React.FC<FooterProps> = ({ onSelectIndustry }) => {
   ];
 
   const legalLinks = [
-    { label: 'Privacy Policy', href: '#' },
-    { label: 'Accessibility Statement', href: '#' },
+    { 
+      label: 'Privacy Policy', 
+      href: '/privacy-policy',
+      onClick: onSelectPrivacy 
+    },
+    { 
+      label: 'Accessibility Statement', 
+      href: '/accessibility-statement',
+      onClick: onSelectAccessibility 
+    },
   ];
 
   const handleLinkClick = (href: string) => {
@@ -56,8 +71,9 @@ export const Footer: React.FC<FooterProps> = ({ onSelectIndustry }) => {
                 <a
                   href={PHONE_TEL}
                   id="footer-phone-link"
+                  onClick={handlePhoneCall}
                   title={`Call ${PHONE_NUMBER}`}
-                  className="inline-flex items-center space-x-2.5 text-lg font-bold text-[#9ce2c7] hover:text-[#8bd6ba] hover:underline transition-colors active:scale-95"
+                  className="inline-flex items-center space-x-2.5 text-lg font-bold text-[#9ce2c7] hover:text-[#8bd6ba] hover:underline transition-colors active:scale-95 cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-full bg-[#9ce2c7]/20 flex items-center justify-center border border-[#9ce2c7]/30">
                     <Phone className="w-4 h-4 text-[#9ce2c7]" />
@@ -85,7 +101,18 @@ export const Footer: React.FC<FooterProps> = ({ onSelectIndustry }) => {
                   key={link.label}
                   href={link.href}
                   id={`footer-legal-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-white underline transition-colors w-max"
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                      e.preventDefault();
+                      if (link.onClick) {
+                        link.onClick();
+                      } else {
+                        window.history.pushState(null, '', link.href);
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }
+                    }
+                  }}
+                  className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-[#9ce2c7] underline transition-colors w-max cursor-pointer"
                 >
                   {link.label}
                 </a>

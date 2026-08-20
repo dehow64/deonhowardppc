@@ -43,6 +43,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { PHONE_NUMBER, PHONE_TEL, GOOGLE_CALENDAR_APPOINTMENT_URL, GOOGLE_CALENDAR_EMBED_URL, AI_SERVICE_OPTIONS } from '../data/contentData';
+import { handlePhoneCall } from '../utils/phone';
 import { getUpcomingBookingDays, getTodayFormatted } from '../utils/dateUtils';
 const TARGET_ADMIN_EMAIL = 'deonhowardppc@gmail.com';
 import { IndustrySubNav } from './IndustrySubNav';
@@ -1157,8 +1158,9 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
             <a
               href={PHONE_TEL}
               id="ind-header-phone-link"
+              onClick={handlePhoneCall}
               title={`Call ${PHONE_NUMBER}`}
-              className="hidden md:flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-[#9ce2c7] transition-colors px-3 py-2 rounded-full hover:bg-white/5 active:scale-95"
+              className="hidden md:flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-gray-300 hover:text-[#9ce2c7] transition-colors px-3 py-2 rounded-full hover:bg-white/5 active:scale-95 cursor-pointer"
             >
               <Phone className="w-3.5 h-3.5 text-[#9ce2c7]" />
               <span>{PHONE_NUMBER}</span>
@@ -1977,7 +1979,41 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
 
       {/* Page Footer */}
       <footer className="py-8 bg-black border-t border-white/10 text-center text-xs text-gray-400">
-        <p>© 2026 Deon Howard PPC • Specialized Digital Acquisition Systems</p>
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>© 2026 Deon Howard PPC • Specialized Digital Acquisition Systems</p>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onBackToMain}
+              className="text-xs text-gray-400 hover:text-[#9ce2c7] underline cursor-pointer"
+            >
+              Main Site
+            </button>
+            <span className="text-gray-600">•</span>
+            <a
+              href="/privacy-policy"
+              onClick={(e) => {
+                e.preventDefault();
+                window.history.pushState(null, '', '/privacy-policy');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+              className="text-xs text-gray-400 hover:text-[#9ce2c7] underline cursor-pointer"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-gray-600">•</span>
+            <a
+              href="/accessibility-statement"
+              onClick={(e) => {
+                e.preventDefault();
+                window.history.pushState(null, '', '/accessibility-statement');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+              className="text-xs text-gray-400 hover:text-[#9ce2c7] underline cursor-pointer"
+            >
+              Accessibility Statement
+            </a>
+          </div>
+        </div>
       </footer>
 
     </div>
