@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Clock, ChevronRight, Sparkles, Phone } from 'lucide-react';
-import { getUpcomingBookingDays, getCurrentWeekRangeLabel } from '../utils/dateUtils';
+import { getUpcomingBookingDays, getCurrentWeekRangeLabel, getTodayFormatted } from '../utils/dateUtils';
 import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
 
 interface HeroProps {
-  onBookClick: () => void;
+  onBookClick: (initialDate?: string, initialSlot?: string) => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
@@ -15,6 +15,23 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
   const timeSlots = activeDay?.timeSlots || ['10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM'];
   const [selectedSlot, setSelectedSlot] = useState<string>(timeSlots[0] || '10:00 AM');
 
+  const handleOpenBookingModal = (chosenSlot?: string) => {
+    const slotToUse = chosenSlot || selectedSlot;
+    const dateToUse = activeDay?.formatted || getTodayFormatted();
+    
+    try {
+      const current = sessionStorage.getItem('pendingLeadData');
+      const obj = current ? JSON.parse(current) : {};
+      obj.selectedDate = dateToUse;
+      obj.selectedTimeSlot = slotToUse;
+      sessionStorage.setItem('pendingLeadData', JSON.stringify(obj));
+    } catch (e) {
+      console.warn('Session storage write error:', e);
+    }
+
+    onBookClick(dateToUse, slotToUse);
+  };
+
   const handleSelectDay = (index: number) => {
     setSelectedDayIndex(index);
     const newDay = upcomingDays[index];
@@ -23,13 +40,9 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
     }
   };
 
-  const scrollToBookingForm = () => {
-    const contactSec = document.getElementById('contact');
-    if (contactSec) {
-      contactSec.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      onBookClick();
-    }
+  const handleSelectSlot = (slot: string) => {
+    setSelectedSlot(slot);
+    handleOpenBookingModal(slot);
   };
 
   return (
@@ -70,7 +83,7 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
             <div className="pt-2 flex flex-wrap gap-4 items-center">
               <button
                 id="hero-book-now-left-btn"
-                onClick={onBookClick}
+                onClick={() => handleOpenBookingModal()}
                 className="bg-black hover:bg-gray-900 text-white font-bold text-sm px-8 py-4 rounded-full transition-all duration-200 shadow-lg flex items-center space-x-2 cursor-pointer border border-white/20 transform hover:-translate-y-0.5"
               >
                 <span>Book Free Automation Strategy Call</span>
@@ -159,7 +172,7 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
                       <button
                         key={slot}
                         id={`hero-time-slot-${slot.replace(/[:\s]/g, '-')}`}
-                        onClick={() => setSelectedSlot(slot)}
+                        onClick={() => handleSelectSlot(slot)}
                         className={`py-2 px-1 text-xs font-bold uppercase tracking-wider transition-all border cursor-pointer text-center rounded-xl ${
                           isSelected
                             ? 'bg-black text-white border-black shadow-md'
@@ -181,8 +194,8 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
                 <div className="pt-1 text-center space-y-2.5">
                   <button
                     id="hero-confirm-slot-btn"
-                    onClick={onBookClick}
-                    className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest py-3.5 transition-colors text-xs cursor-pointer rounded-full shadow-md flex items-center justify-center space-x-2"
+                    onClick={() => handleOpenBookingModal()}
+                    className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest py-3.5 transition-colors text-xs cursor-pointer rounded-full shadow-md flex items-center justify-center space-x-2 transform hover:-translate-y-0.5"
                   >
                     <span>Reserve {activeDay?.dayName} ({selectedSlot})</span>
                     <ChevronRight className="w-3.5 h-3.5 text-[#9ce2c7]" />
@@ -191,7 +204,7 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
                   <div className="flex items-center justify-between pt-1 px-1 text-[11px] font-bold">
                     <button
                       id="hero-see-more-dates-btn"
-                      onClick={scrollToBookingForm}
+                      onClick={() => handleOpenBookingModal()}
                       className="uppercase tracking-wider underline hover:text-black transition-colors cursor-pointer text-[#131d17]"
                     >
                       Full Scheduler

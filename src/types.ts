@@ -49,6 +49,11 @@ export interface ContactFormData {
   companyName: string;
   service: string;
   budget: string;
+  currentRevenue?: string;
+  revenueGoal90Day?: string;
+  projectDescription?: string;
+  description?: string;
+  realEstateRole?: string;
   message: string;
   selectedDate?: string;
   selectedTimeSlot?: string;

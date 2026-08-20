@@ -40,6 +40,8 @@ export default function App() {
     return false;
   });
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [modalInitialDate, setModalInitialDate] = useState<string | undefined>(undefined);
+  const [modalInitialSlot, setModalInitialSlot] = useState<string | undefined>(undefined);
   const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
   const [submissionSuccessData, setSubmissionSuccessData] = useState<ContactFormData | null>(null);
 
@@ -72,32 +74,14 @@ export default function App() {
     const handleCalendarMessage = (e: MessageEvent) => {
       if (e.origin && (e.origin.includes('calendar.google.com') || e.origin.includes('calendar.app.google'))) {
         console.log('📅 Google Calendar appointment scheduled event received:', e.data);
-        if (window.storedLeadData) {
-          fetch('https://script.google.com/macros/s/AKfycbzGtFLUzlrzd7ovTIleSE2wxCiRsWFq0pxQx7Ss_GxhrFObaZA_X5hxqJ4k-ukdqBNL-w/exec', {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: window.storedLeadData.toString()
-          }).finally(() => {
-            setIsThankYouView(true);
-            try {
-              window.history.pushState({ page: 'thank-you' }, '', '/thank-you');
-            } catch {
-              window.location.href = '/thank-you';
-            }
-            document.title = getPageTitle(null, true);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          });
-        } else {
-          setIsThankYouView(true);
-          try {
-            window.history.pushState({ page: 'thank-you' }, '', '/thank-you');
-          } catch {
-            window.location.href = '/thank-you';
-          }
-          document.title = getPageTitle(null, true);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+        setIsThankYouView(true);
+        try {
+          window.history.pushState({ page: 'thank-you' }, '', '/thank-you');
+        } catch {
+          window.location.href = '/thank-you';
         }
+        document.title = getPageTitle(null, true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     };
 
@@ -109,7 +93,9 @@ export default function App() {
     };
   }, []);
 
-  const handleBookClick = () => {
+  const handleBookClick = (initialDate?: string, initialSlot?: string) => {
+    if (initialDate) setModalInitialDate(initialDate);
+    if (initialSlot) setModalInitialSlot(initialSlot);
     setBookingModalOpen(true);
   };
 
@@ -234,6 +220,8 @@ export default function App() {
       {/* Interactive Popup Modals */}
       <BookingModal
         isOpen={bookingModalOpen}
+        initialDate={modalInitialDate}
+        initialTimeSlot={modalInitialSlot}
         onClose={() => setBookingModalOpen(false)}
         onSuccess={handleQuickBookSuccess}
       />

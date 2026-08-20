@@ -140,7 +140,25 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
 
     const formElement = (e.target as HTMLElement).closest('form') || (e.currentTarget as HTMLFormElement);
     const formData = new FormData(formElement);
-    const dataObj = Object.fromEntries(formData.entries());
+    const dataObj: Record<string, any> = {};
+
+    // 1. FIX CHECKBOXES ("services"):
+    // Collect all checked checkboxes as a comma-separated list
+    const checkedServices = Array.from(
+      formElement.querySelectorAll('input[name="services"]:checked, input[type="checkbox"]:checked')
+    ).map((cb: any) => cb.value).filter((val: string) => val && val !== 'on');
+
+    // 2. Extract standard fields
+    for (const [key, value] of formData.entries()) {
+      if (key !== 'services') {
+        dataObj[key] = value;
+      }
+    }
+
+    // Attach all checked services as a combined string
+    dataObj['services'] = checkedServices.length > 0 
+      ? checkedServices.join(', ') 
+      : (formData.get('services') || (reForm.services.length > 0 ? reForm.services.join(', ') : 'None selected'));
 
     const firstNameTrim = reForm.firstName.trim();
     const lastNameTrim = reForm.lastName.trim();
@@ -150,33 +168,56 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
       return;
     }
 
+    const projectDesc = (reForm.projectDescription || (formData.get('projectDescription') as string) || (formData.get('message') as string) || '').trim();
+
     const fullMessage = [
       `Role: ${reForm.reRole}`,
       `Industry/Niche Market: ${reForm.nicheMarket || 'General Real Estate'}`,
       `Current Revenue: ${reForm.currentRevenue}`,
       `90-Day Goal: ${reForm.revenueGoal}`,
       `Ad Budget: ${reForm.adBudget}`,
-      `Services: ${reForm.services.join(', ') || 'All Services'}`,
-      reForm.projectDescription ? `Project Details: ${reForm.projectDescription}` : ''
-    ].filter(Boolean).join('\n');
+      `Services: ${dataObj['services']}`,
+      projectDesc ? `Project Details / Description:\n${projectDesc}` : ''
+    ].filter(Boolean).join('\n\n');
 
-    // Automatically store all field key-value pairs into pendingLeadData in sessionStorage
-    dataObj.name = fullName;
-    dataObj.first_name = firstNameTrim;
-    dataObj.last_name = lastNameTrim;
-    dataObj.email = reForm.email.trim();
-    dataObj.phone = reForm.phone.trim() || PHONE_NUMBER;
-    dataObj.role_description = reForm.reRole;
-    dataObj.niche_market = reForm.nicheMarket || 'Real Estate';
-    dataObj.current_revenue = reForm.currentRevenue;
-    dataObj.revenue_goal_90day = reForm.revenueGoal;
-    dataObj.monthly_ad_budget = reForm.adBudget;
-    dataObj.services_interested = reForm.services.join(', ') || 'All Services';
-    dataObj.project_description = reForm.projectDescription || 'None provided';
-    dataObj.message = fullMessage;
-    dataObj.submitted_at = new Date().toISOString();
+    // Package the complete form payload reliably
+    const formPayload = {
+      formType: 'Real Estate',
+      name: (formData.get('name') as string) || fullName,
+      email: (formData.get('email') as string) || reForm.email.trim(),
+      phone: (formData.get('phone') as string) || reForm.phone.trim() || PHONE_NUMBER,
+      website: (formData.get('website') as string) || '',
+      industry: (formData.get('industry') as string) || reForm.nicheMarket || 'Real Estate',
+      currentRevenue: reForm.currentRevenue || (formData.get('currentRevenue') as string),
+      revenueGoal90Day: reForm.revenueGoal || (formData.get('revenueGoal90Day') as string) || (formData.get('revenueGoal') as string),
+      adBudget: reForm.adBudget || (formData.get('adBudget') as string),
+      services: dataObj['services'] || (reForm.services.length > 0 ? reForm.services.join(', ') : 'None selected'),
+      projectDescription: projectDesc || 'No additional details provided',
+      description: projectDesc || 'No additional details provided',
+      project_description: projectDesc || 'No details provided',
+      projectDetails: projectDesc,
+      project_details: projectDesc,
+      details: projectDesc,
+      comments: projectDesc,
+      notes: projectDesc,
+      'Project Description': projectDesc,
+      'Description': projectDesc,
+      realEstateRole: reForm.reRole || (formData.get('realEstateRole') as string),
+      // backward-compatible & webhook mapping keys
+      ...dataObj,
+      first_name: firstNameTrim,
+      last_name: lastNameTrim,
+      role_description: reForm.reRole,
+      niche_market: reForm.nicheMarket || 'Real Estate',
+      current_revenue: reForm.currentRevenue || (formData.get('currentRevenue') as string),
+      revenue_goal_90day: reForm.revenueGoal || (formData.get('revenueGoal90Day') as string) || (formData.get('revenueGoal') as string),
+      monthly_ad_budget: reForm.adBudget || (formData.get('adBudget') as string),
+      services_interested: dataObj['services'],
+      message: fullMessage,
+      submitted_at: new Date().toISOString()
+    };
 
-    sessionStorage.setItem('pendingLeadData', JSON.stringify(dataObj));
+    sessionStorage.setItem('pendingLeadData', JSON.stringify(formPayload));
 
     const submissionPayload: ContactFormData = {
       firstName: firstNameTrim,
@@ -184,8 +225,11 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
       email: reForm.email,
       phone: reForm.phone || PHONE_NUMBER,
       companyName: reForm.nicheMarket || 'Real Estate Group',
-      service: `Real Estate Acquisition (${reForm.reRole})`,
+      service: typeof dataObj['services'] === 'string' ? dataObj['services'] : `Real Estate Acquisition (${reForm.reRole})`,
       budget: reForm.adBudget,
+      projectDescription: projectDesc,
+      description: projectDesc,
+      realEstateRole: reForm.reRole,
       message: fullMessage,
       selectedDate: selectedBookingDate,
       selectedTimeSlot: selectedSlot
@@ -215,9 +259,30 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
     };
   }, []);
 
-  const handleFinalizeREBooking = () => {
+  const handleFinalizeREBooking = (dateOverride?: string, slotOverride?: string) => {
     setIsSubmitting(true);
-    window.location.href = '/thank-you';
+    const chosenDate = dateOverride || selectedBookingDate;
+    const chosenSlot = slotOverride || selectedSlot;
+
+    try {
+      const existing = sessionStorage.getItem('pendingLeadData');
+      const obj = existing ? JSON.parse(existing) : {};
+      obj.selectedDate = chosenDate;
+      obj.selectedTimeSlot = chosenSlot;
+      sessionStorage.setItem('pendingLeadData', JSON.stringify(obj));
+    } catch (e) {
+      console.warn('RE session write note:', e);
+    }
+
+    if (onFormSubmitted && savedLeadData) {
+      onFormSubmitted({
+        ...savedLeadData,
+        selectedDate: chosenDate,
+        selectedTimeSlot: chosenSlot
+      });
+    } else {
+      window.location.href = '/thank-you';
+    }
   };
 
   return (
@@ -1358,6 +1423,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
           {reStep === 1 && (
             <div className="bg-white text-gray-900 rounded-3xl p-6 sm:p-10 shadow-2xl border border-gray-100 animate-fade-in">
               <form onSubmit={handleSubmitStep1} className="space-y-6">
+                <input type="hidden" name="realEstateRole" value={reForm.reRole} />
                 
                 {/* First Name & Last Name Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1547,13 +1613,20 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                       return (
                         <label
                           key={srv.id}
-                          onClick={() => handleToggleREService(srv.label)}
-                          className={`flex items-center space-x-2.5 p-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all ${
+                          className={`flex items-center space-x-2.5 p-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all select-none ${
                             isChecked
                               ? 'bg-black text-white border-black'
                               : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                           }`}
                         >
+                          <input
+                            type="checkbox"
+                            name="services"
+                            value={srv.label}
+                            checked={isChecked}
+                            onChange={() => handleToggleREService(srv.label)}
+                            className="sr-only"
+                          />
                           <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border ${
                             isChecked ? 'bg-[#9ce2c7] border-[#9ce2c7] text-black' : 'border-gray-300 bg-white'
                           }`}>
@@ -1566,19 +1639,19 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                   </div>
                 </div>
 
-                {/* Space to describe project */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2 flex items-center space-x-1">
-                    <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
-                    <span>Space to Describe Project & Listings Goals</span>
+                {/* Highlighted Green Standout Project Description */}
+                <div className="bg-[#f0fbf6] border-2 border-[#10b981] rounded-2xl p-4 sm:p-5 shadow-md space-y-2.5 transition-all focus-within:ring-2 focus-within:ring-[#10b981]/40">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#065f46] flex items-center space-x-2">
+                    <MessageSquare className="w-4 h-4 text-[#059669]" />
+                    <span>Tell us more about your project, your company, goals, etc.</span>
                   </label>
                   <textarea
                     rows={3}
                     name="projectDescription"
-                    placeholder="Tell us about your active listings, target zip codes, average commission per deal, and goals..."
+                    placeholder="Tell us about your company/brokerage, active listings, target zip codes, commission goals, etc..."
                     value={reForm.projectDescription}
                     onChange={(e) => setReForm({ ...reForm, projectDescription: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-medium text-gray-900 outline-none resize-none"
+                    className="w-full bg-white border-2 border-[#a3e6cd] focus:border-[#059669] focus:ring-2 focus:ring-[#10b981]/30 rounded-xl py-3 px-3.5 text-xs font-medium text-gray-900 placeholder:text-gray-400 outline-none transition-all resize-none shadow-inner"
                   />
                 </div>
 
@@ -1598,118 +1671,39 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
           {/* STEP 2: EMBEDDED REAL ESTATE CALENDAR SCHEDULER */}
           {reStep === 2 && (
             <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-2xl border-2 border-[#a3e6cd]/60 space-y-6 animate-fade-in text-gray-900">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-100 gap-4">
+              
+              {/* Step 2 Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-4">
                 <div>
                   <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#0e6245] bg-[#a3e6cd]/30 px-3 py-1 rounded-full border border-[#a3e6cd]">
-                    Step 2 of 2 • Real Estate Consultation
+                    Step 2 of 2 • Calendar Booking
                   </span>
                   <h3 className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
-                    Select Your Real Estate Strategy Session Time
+                    Select a Time Slot on the Calendar
                   </h3>
                   <p className="text-xs font-medium text-gray-600 mt-1">
-                    1. Pick a date & time in the calendar below. 2. Once confirmed, click <strong>"I've Completed My Booking"</strong>.
+                    Please choose your preferred date and time on the calendar below.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
-                  <button
-                    type="button"
-                    id="re-top-finalize-booking-btn"
-                    onClick={handleFinalizeREBooking}
-                    disabled={isSubmitting}
-                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-950 hover:text-black py-2.5 px-4 rounded-full bg-[#a3e6cd] hover:bg-[#8ee0c1] border border-[#7ed4b4] cursor-pointer transition-all shadow-sm disabled:opacity-75"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Clock className="w-3.5 h-3.5 animate-spin" />
-                        <span>Redirecting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-3.5 h-3.5 text-[#0e6245]" />
-                        <span>I've Booked My Slot</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
-                  </button>
-
-                  <a
-                    href={GOOGLE_CALENDAR_APPOINTMENT_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-700 hover:text-gray-900 py-2.5 px-4 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 cursor-pointer transition-all shadow-sm"
-                  >
-                    <span>New Tab</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-
-                  <a
-                    href={PHONE_TEL}
-                    id="re-step2-call-btn"
-                    title={`Call ${PHONE_NUMBER}`}
-                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#0e6245] hover:text-black py-2.5 px-4 rounded-full bg-[#f0fbf6] hover:bg-[#a3e6cd]/40 border border-[#a3e6cd] cursor-pointer transition-all shadow-sm active:scale-95"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-[#0e6245]" />
-                    <span>Call {PHONE_NUMBER}</span>
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={() => setReStep(1)}
-                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 py-2.5 px-3 rounded-full bg-transparent hover:bg-gray-100 border border-gray-200 cursor-pointer transition-all"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                    <span>Edit Info</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Call Expectations Banner */}
-              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-gray-900">
-                  <Sparkles className="w-4 h-4 text-[#0e6245]" />
-                  <span>What to Expect From Your Real Estate Strategy Call:</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-gray-700">
-                  <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-xs">
-                    <span className="font-bold text-[#0e6245] block mb-0.5">1. Market & Pipeline Audit</span>
-                    <span className="text-gray-600">Analyze buyer/seller demographics, current MLS listings, and cost per lead.</span>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-xs">
-                    <span className="font-bold text-[#0e6245] block mb-0.5">2. AI Lead Qualification System</span>
-                    <span className="text-gray-600">Custom Google PPC + 24/7 AI chatbot blueprint for instant tour bookings.</span>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-xs">
-                    <span className="font-bold text-[#0e6245] block mb-0.5">3. Clear Strategy & Action Steps</span>
-                    <span className="text-gray-600">They will leave the call with a clear strategy and action steps.</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Instruction Notice Banner */}
-              <div className="bg-[#f0fbf6] border border-[#a3e6cd] rounded-xl p-3.5 flex items-center justify-between text-xs text-[#0e6245] font-medium">
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-[#0e6245] shrink-0" />
-                  <span>Select your 30-minute real estate consultation slot on the calendar:</span>
-                </div>
                 <button
                   type="button"
-                  onClick={handleFinalizeREBooking}
-                  className="hidden sm:inline-flex items-center space-x-1 text-[11px] font-bold uppercase tracking-wider text-black underline hover:text-[#0e6245] cursor-pointer"
+                  onClick={() => setReStep(1)}
+                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-700 hover:text-gray-900 py-2.5 px-4 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 cursor-pointer transition-all self-start sm:self-auto"
                 >
-                  <span>Finished? Click to redirect</span>
-                  <ArrowRight className="w-3 h-3" />
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Edit Info</span>
                 </button>
               </div>
 
-              {/* Google Calendar Appointment Scheduler Container (100% width, min 720px height, 12px border-radius) */}
+              {/* Google Calendar Iframe */}
               <div 
-                className="w-full min-h-[720px] bg-white border border-gray-200 overflow-hidden relative shadow-sm"
-                style={{ width: '100%', minHeight: '720px', borderRadius: '12px' }}
+                className="w-full min-h-[720px] bg-white border border-gray-200 overflow-hidden relative shadow-sm rounded-2xl"
+                style={{ width: '100%', minHeight: '720px', borderRadius: '16px' }}
               >
                 <iframe
                   src={GOOGLE_CALENDAR_EMBED_URL}
-                  style={{ border: 0, width: '100%', minHeight: '720px', borderRadius: '12px' }}
+                  style={{ border: 0, width: '100%', minHeight: '720px', borderRadius: '16px' }}
                   width="100%"
                   height="720px"
                   frameBorder="0"
@@ -1736,7 +1730,7 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                 <button
                   type="button"
                   id="re-bottom-finalize-booking-btn"
-                  onClick={handleFinalizeREBooking}
+                  onClick={() => handleFinalizeREBooking()}
                   disabled={isSubmitting}
                   className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
                 >

@@ -18,14 +18,18 @@ async function startServer() {
   const appointmentsStore: any[] = [];
 
   app.post("/api/contact", (req, res) => {
-    const { fullName, email, phone, companyName, service, budget, message, selectedDate, selectedTimeSlot } = req.body;
+    const { fullName, firstName, lastName, email, phone, companyName, company, service, budget, projectDescription, description, message, selectedDate, selectedTimeSlot } = req.body;
+    const desc = projectDescription || description || req.body.project_description || req.body.details || '';
+    const name = fullName || `${firstName || ''} ${lastName || ''}`.trim() || 'Prospective Client';
+    
     console.log("📨 Received contact form submission for deonhowardppc@gmail.com:", {
-      fullName,
+      fullName: name,
       email,
       phone,
-      companyName,
+      companyName: companyName || company,
       service,
       budget,
+      projectDescription: desc,
       selectedDate,
       selectedTimeSlot,
       receivedAt: new Date().toISOString()
@@ -33,6 +37,9 @@ async function startServer() {
     appointmentsStore.push({
       type: "contact",
       ...req.body,
+      fullName: name,
+      projectDescription: desc,
+      description: desc,
       id: `lead-${Date.now()}`,
       receivedAt: new Date().toISOString()
     });
@@ -41,9 +48,12 @@ async function startServer() {
 
   // Appointments API endpoint
   app.post("/api/appointments", (req, res) => {
+    const desc = req.body.projectDescription || req.body.description || req.body.project_description || req.body.details || '';
     const appointmentData = {
       id: `apt-${Date.now()}`,
       ...req.body,
+      projectDescription: desc,
+      description: desc,
       targetAdminEmail: "deonhowardppc@gmail.com",
       status: "scheduled",
       createdAt: new Date().toISOString()

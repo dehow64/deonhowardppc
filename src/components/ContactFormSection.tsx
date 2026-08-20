@@ -11,6 +11,7 @@ import {
   Mail, 
   Phone,
   Globe,
+  Building2,
   DollarSign, 
   TrendingUp, 
   Target, 
@@ -60,6 +61,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
   const [formState, setFormState] = useState({
     firstName: '',
     lastName: '',
+    companyName: '',
     email: '',
     phone: '',
     website: '',
@@ -133,10 +135,29 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
 
     const formElement = (e.target as HTMLElement).closest('form') || (e.currentTarget as HTMLFormElement);
     const formData = new FormData(formElement);
-    const dataObj = Object.fromEntries(formData.entries());
+    const dataObj: Record<string, any> = {};
+
+    // 1. FIX CHECKBOXES ("services"):
+    // Collect all checked checkboxes as a comma-separated list
+    const checkedServices = Array.from(
+      formElement.querySelectorAll('input[name="services"]:checked, input[type="checkbox"]:checked')
+    ).map((cb: any) => cb.value).filter((val: string) => val && val !== 'on');
+
+    // 2. Extract standard fields
+    for (const [key, value] of formData.entries()) {
+      if (key !== 'services') {
+        dataObj[key] = value;
+      }
+    }
+
+    // Attach all checked services as a combined string
+    dataObj['services'] = checkedServices.length > 0 
+      ? checkedServices.join(', ') 
+      : (formData.get('services') || (formState.services.length > 0 ? formState.services.join(', ') : 'None selected'));
 
     const firstNameValue = formState.firstName.trim();
     const lastNameValue = formState.lastName.trim();
+    const companyNameValue = formState.companyName.trim();
     const fullName = `${firstNameValue} ${lastNameValue}`.trim();
     const emailValue = formState.email.trim();
 
@@ -148,33 +169,65 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
       ? (formState.otherIndustry.trim() ? `Other (${formState.otherIndustry.trim()})` : 'Other')
       : formState.industry;
 
+    const projectDesc = (formState.projectDescription || (formData.get('projectDescription') as string) || (formData.get('message') as string) || '').trim();
+
     const compiledMessage = [
+      companyNameValue ? `Company: ${companyNameValue}` : '',
       `Website: ${formState.website || 'Not provided'}`,
       `Industry: ${resolvedIndustry || 'Not specified'}`,
       `Current Revenue: ${formState.currentRevenue}`,
       `90-Day Goal: ${formState.revenueGoal}`,
       `Ad Budget: ${formState.adBudget}`,
-      `Services: ${formState.services.join(', ') || 'None specified'}`,
-      formState.projectDescription ? `Project Details: ${formState.projectDescription}` : ''
-    ].filter(Boolean).join('\n');
+      `Services: ${dataObj['services']}`,
+      projectDesc ? `Project Details / Description:\n${projectDesc}` : ''
+    ].filter(Boolean).join('\n\n');
 
-    // Automatically store all field key-value pairs into pendingLeadData in sessionStorage
-    dataObj.name = fullName;
-    dataObj.first_name = firstNameValue;
-    dataObj.last_name = lastNameValue;
-    dataObj.email = emailValue;
-    dataObj.phone = formState.phone || PHONE_NUMBER;
-    dataObj.website = formState.website || 'None provided';
-    dataObj.industry = resolvedIndustry;
-    dataObj.current_revenue = formState.currentRevenue;
-    dataObj.revenue_goal_90day = formState.revenueGoal;
-    dataObj.monthly_ad_budget = formState.adBudget;
-    dataObj.services_interested = formState.services.join(', ') || 'All Services';
-    dataObj.project_description = formState.projectDescription || 'No details provided';
-    dataObj.message = compiledMessage;
-    dataObj.submitted_at = new Date().toISOString();
+    // Package the complete form payload reliably
+    const formPayload = {
+      formType: 'General Business Consultation',
+      name: (formData.get('name') as string) || fullName,
+      companyName: (formData.get('companyName') as string) || companyNameValue || '',
+      email: (formData.get('email') as string) || emailValue,
+      phone: (formData.get('phone') as string) || formState.phone || PHONE_NUMBER,
+      website: (formData.get('website') as string) || formState.website || '',
+      industry: (formData.get('industry') as string) || resolvedIndustry || 'General Business',
+      currentRevenue: formState.currentRevenue || (formData.get('currentRevenue') as string),
+      revenueGoal90Day: formState.revenueGoal || (formData.get('revenueGoal90Day') as string) || (formData.get('revenueGoal') as string),
+      adBudget: formState.adBudget || (formData.get('adBudget') as string),
+      services: dataObj['services'] || (formState.services.length > 0 ? formState.services.join(', ') : 'None selected'),
+      projectDescription: projectDesc || 'No additional details provided',
+      description: projectDesc || 'No additional details provided',
+      project_description: projectDesc || 'No details provided',
+      projectDetails: projectDesc,
+      project_details: projectDesc,
+      details: projectDesc,
+      comments: projectDesc,
+      notes: projectDesc,
+      'Project Description': projectDesc,
+      'Description': projectDesc,
+      // backward-compatible & webhook mapping keys
+      ...dataObj,
+      first_name: firstNameValue,
+      last_name: lastNameValue,
+      company: (formData.get('companyName') as string) || companyNameValue || '',
+      current_revenue: formState.currentRevenue || (formData.get('currentRevenue') as string),
+      revenue_goal_90day: formState.revenueGoal || (formData.get('revenueGoal90Day') as string) || (formData.get('revenueGoal') as string),
+      monthly_ad_budget: formState.adBudget || (formData.get('adBudget') as string),
+      services_interested: dataObj['services'],
+      message: compiledMessage,
+      submitted_at: new Date().toISOString()
+    };
 
-    sessionStorage.setItem('pendingLeadData', JSON.stringify(dataObj));
+    sessionStorage.setItem('pendingLeadData', JSON.stringify(formPayload));
+
+    // Also populate window.storedLeadData for iframe postMessage listeners
+    const searchParams = new URLSearchParams();
+    for (const [k, v] of Object.entries(formPayload)) {
+      if (v !== undefined && v !== null) {
+        searchParams.append(k, String(v));
+      }
+    }
+    window.storedLeadData = searchParams;
 
     const leadPayload: ContactFormData = {
       firstName: firstNameValue,
@@ -183,9 +236,11 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
       phone: formState.phone || PHONE_NUMBER,
       website: formState.website,
       industry: resolvedIndustry,
-      companyName: resolvedIndustry || 'Growth Partner',
-      service: formState.services.join(', ') || 'Custom Growth & Automation System',
+      companyName: companyNameValue || resolvedIndustry || 'Growth Partner',
+      service: typeof dataObj['services'] === 'string' ? dataObj['services'] : 'Custom Growth & Automation System',
       budget: formState.adBudget,
+      projectDescription: projectDesc,
+      description: projectDesc,
       message: compiledMessage,
       selectedDate: selectedBookingDate,
       selectedTimeSlot: selectedSlot
@@ -216,9 +271,30 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
   }, []);
 
   // STEP 2: FINALIZE & REDIRECT TO THANK YOU PAGE
-  const handleFinalizeBooking = () => {
+  const handleFinalizeBooking = (dateOverride?: string, slotOverride?: string) => {
     setIsFinalizing(true);
-    window.location.href = '/thank-you';
+    const chosenDate = dateOverride || selectedBookingDate;
+    const chosenSlot = slotOverride || selectedSlot;
+
+    try {
+      const existing = sessionStorage.getItem('pendingLeadData');
+      const obj = existing ? JSON.parse(existing) : {};
+      obj.selectedDate = chosenDate;
+      obj.selectedTimeSlot = chosenSlot;
+      sessionStorage.setItem('pendingLeadData', JSON.stringify(obj));
+    } catch (e) {
+      console.warn('Session write notice:', e);
+    }
+
+    if (onFormSubmitted && submittedLeadData) {
+      onFormSubmitted({
+        ...submittedLeadData,
+        selectedDate: chosenDate,
+        selectedTimeSlot: chosenSlot
+      });
+    } else {
+      window.location.href = '/thank-you';
+    }
   };
 
   return (
@@ -344,20 +420,36 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                 </div>
               </div>
 
-              {/* Website Row */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-2 flex items-center space-x-1">
-                  <Globe className="w-3.5 h-3.5 text-gray-500" />
-                  <span>Website URL</span>
-                </label>
-                <input
-                  type="text"
-                  name="website"
-                  placeholder="www.yourcompany.com"
-                  value={formState.website}
-                  onChange={(e) => setFormState({ ...formState, website: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none transition-all"
-                />
+              {/* Company Name & Website Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-2 flex items-center space-x-1">
+                    <Building2 className="w-3.5 h-3.5 text-gray-500" />
+                    <span>Company Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="companyName"
+                    placeholder="Acme Growth Inc."
+                    value={formState.companyName}
+                    onChange={(e) => setFormState({ ...formState, companyName: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-2 flex items-center space-x-1">
+                    <Globe className="w-3.5 h-3.5 text-gray-500" />
+                    <span>Website URL</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="website"
+                    placeholder="www.yourcompany.com"
+                    value={formState.website}
+                    onChange={(e) => setFormState({ ...formState, website: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none transition-all"
+                  />
+                </div>
               </div>
 
               {/* Industry Dropdown with Other slot */}
@@ -425,7 +517,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                     <span>90-Day Revenue Goal</span>
                   </label>
                   <select
-                    name="revenueGoal"
+                    name="revenueGoal90Day"
                     value={formState.revenueGoal}
                     onChange={(e) => setFormState({ ...formState, revenueGoal: e.target.value })}
                     className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-bold text-gray-900 outline-none transition-all"
@@ -486,13 +578,20 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                     return (
                       <label
                         key={srv.id}
-                        onClick={() => handleToggleService(srv.label)}
-                        className={`flex items-center space-x-3 p-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
+                        className={`flex items-center space-x-3 p-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all select-none ${
                           isChecked
                             ? 'bg-black text-white border-black shadow-sm'
                             : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                         }`}
                       >
+                        <input
+                          type="checkbox"
+                          name="services"
+                          value={srv.label}
+                          checked={isChecked}
+                          onChange={() => handleToggleService(srv.label)}
+                          className="sr-only"
+                        />
                         <div className={`w-4 h-4 rounded flex items-center justify-center border ${
                           isChecked ? 'bg-[#9ce2c7] border-[#9ce2c7] text-black' : 'border-gray-300 bg-white'
                         }`}>
@@ -505,19 +604,19 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                 </div>
               </div>
 
-              {/* Space to describe project */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-800 mb-2 flex items-center space-x-1">
-                  <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
-                  <span>Space to Describe Project & Specific Goals</span>
+              {/* Highlighted Green Standout Project Description */}
+              <div className="bg-[#f0fbf6] border-2 border-[#10b981] rounded-2xl p-4 sm:p-5 shadow-md space-y-2.5 transition-all focus-within:ring-2 focus-within:ring-[#10b981]/40">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#065f46] flex items-center space-x-2">
+                  <MessageSquare className="w-4 h-4 text-[#059669]" />
+                  <span>Tell us more about your project, your company, goals, etc.</span>
                 </label>
                 <textarea
                   rows={3}
                   name="projectDescription"
-                  placeholder="Tell us about your current campaigns, target audience, hurdles, and what success looks like in the next 90 days..."
+                  placeholder="Tell us more about your project, your company, goals, current challenges, 90-day targets, etc..."
                   value={formState.projectDescription}
                   onChange={(e) => setFormState({ ...formState, projectDescription: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-3 px-4 text-xs font-medium text-gray-900 outline-none transition-all resize-none"
+                  className="w-full bg-white border-2 border-[#a3e6cd] focus:border-[#059669] focus:ring-2 focus:ring-[#10b981]/30 rounded-xl py-3 px-3.5 text-xs font-medium text-gray-900 placeholder:text-gray-400 outline-none transition-all resize-none shadow-inner"
                 />
               </div>
 
@@ -543,119 +642,38 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
         {currentStep === 2 && (
           <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-2xl border-2 border-[#a3e6cd]/60 space-y-6 animate-fade-in">
             
-            {/* Step 2 Header & Action Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-100 gap-4">
+            {/* Step 2 Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-4">
               <div>
                 <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#0e6245] bg-[#a3e6cd]/30 px-3 py-1 rounded-full border border-[#a3e6cd]">
                   Step 2 of 2 • Calendar Booking
                 </span>
                 <h3 className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
-                  Select Your Consultation Time
+                  Select a Time Slot on the Calendar
                 </h3>
                 <p className="text-xs font-medium text-gray-600 mt-1">
-                  1. Pick a date & time in the calendar below. 2. Once confirmed, click <strong>"I've Completed My Booking"</strong>.
+                  Please choose your preferred date and time on the calendar below.
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
-                <button
-                  type="button"
-                  id="top-finalize-booking-btn"
-                  onClick={handleFinalizeBooking}
-                  disabled={isFinalizing}
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-950 hover:text-black py-2.5 px-4 rounded-full bg-[#a3e6cd] hover:bg-[#8ee0c1] border border-[#7ed4b4] cursor-pointer transition-all shadow-sm disabled:opacity-75"
-                >
-                  {isFinalizing ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Redirecting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-3.5 h-3.5 text-[#0e6245]" />
-                      <span>I've Booked My Slot</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-
-                <a
-                  href={GOOGLE_CALENDAR_APPOINTMENT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-700 hover:text-gray-900 py-2.5 px-4 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 cursor-pointer transition-all shadow-sm"
-                >
-                  <span>New Tab</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-
-                <a
-                  href={PHONE_TEL}
-                  id="contact-step2-call-btn"
-                  title={`Call ${PHONE_NUMBER}`}
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#0e6245] hover:text-black py-2.5 px-4 rounded-full bg-[#f0fbf6] hover:bg-[#a3e6cd]/40 border border-[#a3e6cd] cursor-pointer transition-all shadow-sm active:scale-95"
-                >
-                  <Phone className="w-3.5 h-3.5 text-[#0e6245]" />
-                  <span>Call {PHONE_NUMBER}</span>
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(1)}
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 py-2.5 px-3 rounded-full bg-transparent hover:bg-gray-100 border border-gray-200 cursor-pointer transition-all"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                  <span>Edit Info</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Call Expectations Banner */}
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-2">
-              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-gray-900">
-                <Sparkles className="w-4 h-4 text-[#0e6245]" />
-                <span>What to Expect From Your Call:</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-gray-700">
-                <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-xs">
-                  <span className="font-bold text-[#0e6245] block mb-0.5">1. Growth Audit</span>
-                  <span className="text-gray-600">Review your current acquisition channels and conversion bottlenecks.</span>
-                </div>
-                <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-xs">
-                  <span className="font-bold text-[#0e6245] block mb-0.5">2. Custom Automation Blueprint</span>
-                  <span className="text-gray-600">Identify high-ROI PPC campaigns and AI workflow opportunities.</span>
-                </div>
-                <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-xs">
-                  <span className="font-bold text-[#0e6245] block mb-0.5">3. Clear Strategy & Action Steps</span>
-                  <span className="text-gray-600">They will leave the call with a clear strategy and action steps.</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Instruction Notice Banner */}
-            <div className="bg-[#f0fbf6] border border-[#a3e6cd] rounded-xl p-3.5 flex items-center justify-between text-xs text-[#0e6245] font-medium">
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-[#0e6245] shrink-0" />
-                <span>Choose your preferred 30-min strategy session directly in the scheduler below:</span>
-              </div>
               <button
                 type="button"
-                onClick={handleFinalizeBooking}
-                className="hidden sm:inline-flex items-center space-x-1 text-[11px] font-bold uppercase tracking-wider text-black underline hover:text-[#0e6245] cursor-pointer"
+                onClick={() => setCurrentStep(1)}
+                className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-700 hover:text-gray-900 py-2.5 px-4 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 cursor-pointer transition-all self-start sm:self-auto"
               >
-                <span>Finished? Click here to redirect</span>
-                <ArrowRight className="w-3 h-3" />
+                <ChevronLeft className="w-4 h-4" />
+                <span>Edit Info</span>
               </button>
             </div>
 
-            {/* Google Calendar Appointment Scheduler Container (100% width, min 720px height, 12px border-radius) */}
+            {/* Google Calendar Iframe */}
             <div 
-              className="w-full min-h-[720px] bg-white border border-gray-200 overflow-hidden relative shadow-sm"
-              style={{ width: '100%', minHeight: '720px', borderRadius: '12px' }}
+              className="w-full min-h-[720px] bg-white border border-gray-200 overflow-hidden relative shadow-sm rounded-2xl"
+              style={{ width: '100%', minHeight: '720px', borderRadius: '16px' }}
             >
               <iframe
                 src={GOOGLE_CALENDAR_EMBED_URL}
-                style={{ border: 0, width: '100%', minHeight: '720px', borderRadius: '12px' }}
+                style={{ border: 0, width: '100%', minHeight: '720px', borderRadius: '16px' }}
                 width="100%"
                 height="720px"
                 frameBorder="0"
@@ -664,25 +682,25 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
               />
             </div>
 
-            {/* Prominent Bottom Confirmation Bar */}
+            {/* Bottom Confirmation Bar */}
             <div className="bg-[#121212] text-white p-6 sm:p-8 rounded-2xl border-2 border-[#a3e6cd] shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
               <div className="space-y-1">
                 <div className="flex items-center justify-center sm:justify-start space-x-2 text-[#9ce2c7] text-xs font-bold uppercase tracking-wider">
                   <CheckCircle className="w-4 h-4 text-[#9ce2c7]" />
-                  <span>Step 2 of 2 Completion</span>
+                  <span>Session Scheduling</span>
                 </div>
                 <h4 className="text-lg sm:text-xl font-bold text-white">
                   Done Choosing Your Time on the Calendar?
                 </h4>
                 <p className="text-xs text-gray-300">
-                  Click below to confirm your appointment and proceed to the Thank You & next steps page.
+                  Click below to confirm your appointment and proceed to the Thank You briefing page.
                 </p>
               </div>
 
               <button
                 type="button"
                 id="bottom-finalize-booking-btn"
-                onClick={handleFinalizeBooking}
+                onClick={() => handleFinalizeBooking()}
                 disabled={isFinalizing}
                 className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
               >

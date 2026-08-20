@@ -12,6 +12,7 @@ import {
   Mail, 
   Phone, 
   Globe, 
+  Building2,
   Layers, 
   DollarSign, 
   TrendingUp, 
@@ -27,18 +28,28 @@ import { scheduleGoogleWorkspaceAppointment, TARGET_ADMIN_EMAIL } from '../servi
 import { PHONE_NUMBER, PHONE_TEL, GOOGLE_CALENDAR_APPOINTMENT_URL, GOOGLE_CALENDAR_EMBED_URL } from '../data/contentData';
 import { ContactFormData } from '../types';
 import { INDUSTRY_OPTIONS, SERVICE_OPTIONS } from './ContactFormSection';
+import { getUpcomingBookingDays, getTodayFormatted } from '../utils/dateUtils';
 
 interface BookingModalProps {
   isOpen: boolean;
+  initialDate?: string;
+  initialTimeSlot?: string;
   onClose: () => void;
   onSuccess: (data: ContactFormData) => void;
 }
 
-export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const BookingModal: React.FC<BookingModalProps> = ({ 
+  isOpen, 
+  initialDate, 
+  initialTimeSlot, 
+  onClose, 
+  onSuccess 
+}) => {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [website, setWebsite] = useState('');
@@ -55,18 +66,31 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedLeadData, setSavedLeadData] = useState<ContactFormData | null>(null);
 
+  const upcomingBookingDays = getUpcomingBookingDays(5);
+  const [selectedBookingDate, setSelectedBookingDate] = useState<string>(initialDate || upcomingBookingDays[0]?.formatted || getTodayFormatted());
+  const [selectedSlot, setSelectedSlot] = useState<string>(initialTimeSlot || upcomingBookingDays[0]?.timeSlots[0] || '10:00 AM');
+
+  // Synchronize initial date and slot when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      if (initialDate) {
+        setSelectedBookingDate(initialDate);
+      }
+      if (initialTimeSlot) {
+        setSelectedSlot(initialTimeSlot);
+      }
+      setCurrentStep(1);
+      setIsFinalizing(false);
+    }
+  }, [isOpen, initialDate, initialTimeSlot]);
+
   // Listen for Google Calendar postMessage completion inside modal
   useEffect(() => {
     const handleCalendarMessage = (e: MessageEvent) => {
       try {
         if (e.origin && (e.origin.includes('calendar.google.com') || e.origin.includes('calendar.app.google'))) {
           console.log('📅 Modal Google Calendar appointment scheduled event received:', e.data);
-          if (savedLeadData) {
-            onSuccess(savedLeadData);
-          } else {
-            window.location.href = '/thank-you';
-          }
-          onClose();
+          handleFinalizeModalBooking();
         }
       } catch (err) {
         console.warn('Error evaluating calendar event message in modal:', err);
@@ -75,7 +99,47 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
 
     window.addEventListener('message', handleCalendarMessage);
     return () => window.removeEventListener('message', handleCalendarMessage);
-  }, [onSuccess, savedLeadData, onClose]);
+  }, [onSuccess, savedLeadData, onClose, selectedBookingDate, selectedSlot]);
+
+  const handleFinalizeModalBooking = (dateOverride?: string, slotOverride?: string) => {
+    setIsFinalizing(true);
+    const chosenDate = dateOverride || selectedBookingDate;
+    const chosenSlot = slotOverride || selectedSlot;
+
+    try {
+      const existing = sessionStorage.getItem('pendingLeadData');
+      const obj = existing ? JSON.parse(existing) : {};
+      obj.selectedDate = chosenDate;
+      obj.selectedTimeSlot = chosenSlot;
+      sessionStorage.setItem('pendingLeadData', JSON.stringify(obj));
+    } catch (e) {
+      console.warn('Modal session write notice:', e);
+    }
+
+    const desc = (projectDescription || '').trim();
+    const finalLeadData: ContactFormData = savedLeadData || {
+      firstName: firstName || 'Client',
+      lastName: lastName || '',
+      email: email || '',
+      phone: phone || PHONE_NUMBER,
+      website: website || '',
+      industry: industry || 'General Business',
+      companyName: 'Growth Partner',
+      service: selectedServices.join(', ') || 'Custom Marketing Automation System',
+      budget: adBudget,
+      projectDescription: desc,
+      description: desc,
+      message: desc ? `Project Details:\n${desc}\n\nSelected Slot: ${chosenDate} at ${chosenSlot}` : `Selected Slot: ${chosenDate} at ${chosenSlot}`,
+      selectedDate: chosenDate,
+      selectedTimeSlot: chosenSlot
+    };
+
+    onSuccess({
+      ...finalLeadData,
+      selectedDate: chosenDate,
+      selectedTimeSlot: chosenSlot
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -100,60 +164,76 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
   const handleProceedToCalendar = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const formElement = (e.target as HTMLElement).closest('form') || (e.currentTarget as HTMLFormElement);
+    const formElement = ((e.target as HTMLElement).closest('form') || (e.currentTarget as HTMLFormElement)) as HTMLFormElement;
     const formData = new FormData(formElement);
-    const dataObj = Object.fromEntries(formData.entries());
 
-    const firstNameTrim = firstName.trim();
-    const lastNameTrim = lastName.trim();
-    const fullName = `${firstNameTrim} ${lastNameTrim}`.trim() || 'Client';
+    // Gather checked services
+    const checkedServices = Array.from(
+      formElement.querySelectorAll('input[type="checkbox"]:checked')
+    ).map((cb: any) => cb.value).filter((val: string) => val && val !== 'on').join(', ');
 
-    if (!firstNameTrim || !email.trim()) {
-      return;
+    const firstNameVal = firstName || (formData.get('firstName') as string) || '';
+    const lastNameVal = lastName || (formData.get('lastName') as string) || '';
+    const emailVal = email || (formData.get('email') as string) || '';
+    const phoneVal = phone || (formData.get('phone') as string) || '';
+    const websiteVal = website || (formData.get('website') as string) || '';
+    const industryVal = (industry === 'Other' && otherIndustry.trim() ? `Other (${otherIndustry.trim()})` : industry) || (formData.get('industry') as string) || '';
+    const currentRevenueVal = currentRevenue || (formData.get('currentRevenue') as string) || '';
+    const revenueGoalVal = revenueGoal || (formData.get('revenueGoal90Day') as string) || (formData.get('revenueGoal') as string) || '';
+    const adBudgetVal = adBudget || (formData.get('adBudget') as string) || '';
+    const servicesVal = checkedServices || selectedServices.join(', ') || 'None selected';
+    const projectDescVal = projectDescription || (formData.get('projectDescription') as string) || (formData.get('message') as string) || 'None provided';
+
+    const formPayload = {
+      formType: 'Strategy Session Form',
+      firstName: firstNameVal,
+      lastName: lastNameVal,
+      name: `${firstNameVal} ${lastNameVal}`.trim(),
+      email: emailVal,
+      phone: phoneVal,
+      website: websiteVal,
+      industry: industryVal,
+      currentRevenue: currentRevenueVal,
+      revenueGoal90Day: revenueGoalVal,
+      adBudget: adBudgetVal,
+      services: servicesVal,
+      projectDescription: projectDescVal
+    };
+
+    // Store in sessionStorage
+    sessionStorage.setItem('pendingLeadData', JSON.stringify(formPayload));
+
+    // Also populate window.storedLeadData for iframe postMessage listeners
+    const searchParams = new URLSearchParams();
+    for (const [k, v] of Object.entries(formPayload)) {
+      if (v !== undefined && v !== null) {
+        searchParams.append(k, String(v));
+      }
     }
-
-    const resolvedIndustry = industry === 'Other'
-      ? (otherIndustry.trim() ? `Other (${otherIndustry.trim()})` : 'Other')
-      : industry;
+    window.storedLeadData = searchParams;
 
     const fullMessage = [
-      `Website: ${website || 'None provided'}`,
-      `Industry: ${resolvedIndustry || 'General Business'}`,
-      `Current Revenue: ${currentRevenue}`,
-      `90-Day Goal: ${revenueGoal}`,
-      `Ad Budget: ${adBudget}`,
-      `Services: ${selectedServices.join(', ') || 'All Services'}`,
-      projectDescription ? `Project Details: ${projectDescription}` : ''
-    ].filter(Boolean).join('\n');
-
-    // Automatically store all field key-value pairs into pendingLeadData in sessionStorage
-    dataObj.name = fullName;
-    dataObj.first_name = firstNameTrim;
-    dataObj.last_name = lastNameTrim;
-    dataObj.email = email.trim();
-    dataObj.phone = phone.trim() || PHONE_NUMBER;
-    dataObj.website = website.trim() || 'None provided';
-    dataObj.industry = resolvedIndustry;
-    dataObj.current_revenue = currentRevenue;
-    dataObj.revenue_goal_90day = revenueGoal;
-    dataObj.monthly_ad_budget = adBudget;
-    dataObj.services_interested = selectedServices.join(', ') || 'All Services';
-    dataObj.project_description = projectDescription || 'None provided';
-    dataObj.message = fullMessage;
-    dataObj.submitted_at = new Date().toISOString();
-
-    sessionStorage.setItem('pendingLeadData', JSON.stringify(dataObj));
+      `Website: ${websiteVal || 'None provided'}`,
+      `Industry: ${industryVal || 'General Business'}`,
+      `Current Revenue: ${currentRevenueVal}`,
+      `90-Day Goal: ${revenueGoalVal}`,
+      `Ad Budget: ${adBudgetVal}`,
+      `Services: ${servicesVal}`,
+      projectDescVal !== 'None provided' ? `Project Details / Description:\n${projectDescVal}` : ''
+    ].filter(Boolean).join('\n\n');
 
     const submissionData: ContactFormData = {
-      firstName: firstNameTrim,
-      lastName: lastNameTrim,
-      email,
-      phone: phone || PHONE_NUMBER,
-      website,
-      industry: resolvedIndustry,
-      companyName: resolvedIndustry || 'Growth Partner',
-      service: selectedServices.join(', ') || 'Custom Marketing Automation System',
-      budget: adBudget,
+      firstName: firstNameVal,
+      lastName: lastNameVal,
+      email: emailVal,
+      phone: phoneVal || PHONE_NUMBER,
+      website: websiteVal,
+      industry: industryVal,
+      companyName: industryVal || 'Growth Partner',
+      service: servicesVal,
+      budget: adBudgetVal,
+      projectDescription: projectDescVal,
+      description: projectDescVal,
       message: fullMessage
     };
 
@@ -161,25 +241,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
 
     // Smoothly transition to STEP 2 (Embedded Calendar) without making any network requests yet
     setCurrentStep(2);
-  };
-
-  // STEP 2: LISTEN FOR GOOGLE CALENDAR APPOINTMENT COMPLETION
-  useEffect(() => {
-    const handleCalendarMessage = (e: MessageEvent) => {
-      if (e.origin && (e.origin.includes('calendar.google.com') || e.origin.includes('calendar.app.google'))) {
-        window.location.href = '/thank-you';
-      }
-    };
-
-    window.addEventListener('message', handleCalendarMessage);
-    return () => {
-      window.removeEventListener('message', handleCalendarMessage);
-    };
-  }, []);
-
-  const handleFinalizeModalBooking = () => {
-    setIsFinalizing(true);
-    window.location.href = '/thank-you';
   };
 
   return (
@@ -204,8 +265,22 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                 Book 1-on-1 Strategy Session
               </h3>
               <p className="text-xs font-medium text-gray-600 mt-1">
-                Tell us about your marketing goals. In the next step, you'll choose an exact strategy time on Google Calendar.
+                Tell us about your business and goals below. In the next step, you can lock in your exact consultation slot on Google Calendar.
               </p>
+
+              {selectedSlot && selectedBookingDate && (
+                <div className="mt-3 bg-[#f0fbf6] border border-[#a3e6cd] rounded-xl p-3 flex items-center justify-between text-xs text-[#0e6245]">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-[#0e6245] shrink-0" />
+                    <span>
+                      Selected Slot: <strong>{selectedBookingDate} at {selectedSlot}</strong> (EDT)
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono uppercase bg-white text-[#0e6245] px-2 py-0.5 rounded-full border border-[#a3e6cd] font-bold shrink-0">
+                    Holding Spot
+                  </span>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleProceedToCalendar} className="space-y-4">
@@ -356,7 +431,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                     <span>90-Day Revenue Goal</span>
                   </label>
                   <select
-                    name="revenueGoal"
+                    name="revenueGoal90Day"
                     value={revenueGoal}
                     onChange={(e) => setRevenueGoal(e.target.value)}
                     className="w-full bg-gray-50 border border-gray-200 focus:border-black focus:ring-1 focus:ring-black rounded-xl py-2.5 px-3.5 text-xs font-bold text-gray-900 outline-none"
@@ -411,13 +486,20 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                     return (
                       <label
                         key={srv.id}
-                        onClick={() => handleToggleService(srv.label)}
-                        className={`flex items-center space-x-2 p-2 rounded-xl border text-xs font-medium cursor-pointer transition-all ${
+                        className={`flex items-center space-x-2 p-2 rounded-xl border text-xs font-medium cursor-pointer transition-all select-none ${
                           isChecked
                             ? 'bg-black text-white border-black'
                             : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                         }`}
                       >
+                        <input
+                          type="checkbox"
+                          name="services"
+                          value={srv.label}
+                          checked={isChecked}
+                          onChange={() => handleToggleService(srv.label)}
+                          className="sr-only"
+                        />
                         <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border ${
                           isChecked ? 'bg-[#a3e6cd] border-[#a3e6cd] text-black' : 'border-gray-300 bg-white'
                         }`}>
@@ -430,19 +512,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                 </div>
               </div>
 
-              {/* Describe Project */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center space-x-1">
-                  <MessageSquare className="w-3 h-3 text-gray-500" />
-                  <span>Space to Describe Project</span>
+              {/* Highlighted Green Standout Project Description */}
+              <div className="bg-[#f0fbf6] border-2 border-[#10b981] rounded-2xl p-4 shadow-md space-y-2.5 transition-all focus-within:ring-2 focus-within:ring-[#10b981]/40">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#065f46] flex items-center space-x-2">
+                  <MessageSquare className="w-4 h-4 text-[#059669]" />
+                  <span>Tell us more about your project, your company, goals, etc.</span>
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   name="projectDescription"
-                  placeholder="Tell us about your target market, past campaigns, and goals..."
+                  placeholder="Tell us more about your project, your company, goals, current challenges, 90-day targets, etc..."
                   value={projectDescription}
                   onChange={(e) => setProjectDescription(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 focus:border-black rounded-xl py-2 px-3 text-xs font-medium text-gray-900 outline-none resize-none"
+                  className="w-full bg-white border-2 border-[#a3e6cd] focus:border-[#059669] focus:ring-2 focus:ring-[#10b981]/30 rounded-xl py-3 px-3.5 text-xs font-medium text-gray-900 placeholder:text-gray-400 outline-none transition-all resize-none shadow-inner"
                 />
               </div>
 
@@ -458,118 +540,38 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
         ) : (
           /* STEP 2: EMBEDDED GOOGLE CALENDAR APPOINTMENT SCHEDULER */
           <div className="space-y-5 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+            {/* Step 2 Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 gap-3">
               <div>
                 <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#0e6245] bg-[#a3e6cd]/30 px-3 py-1 rounded-full border border-[#a3e6cd]">
                   Step 2 of 2 • Calendar Booking
                 </span>
-                <h3 className="text-xl sm:text-2xl font-black text-gray-900 mt-1">
-                  Select Your Consultation Time
+                <h3 className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
+                  Select a Time Slot on the Calendar
                 </h3>
-                <p className="text-xs font-medium text-gray-600">
-                  1. Pick a slot in the scheduler. 2. Click <strong>"I've Completed My Booking"</strong>.
+                <p className="text-xs font-medium text-gray-600 mt-1">
+                  Please choose your preferred date and time on the calendar below.
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
-                <button
-                  type="button"
-                  id="modal-top-finalize-booking-btn"
-                  onClick={handleFinalizeModalBooking}
-                  disabled={isFinalizing}
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-950 hover:text-black py-2.5 px-4 rounded-full bg-[#a3e6cd] hover:bg-[#8ee0c1] border border-[#7ed4b4] cursor-pointer transition-all shadow-sm disabled:opacity-75"
-                >
-                  {isFinalizing ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Redirecting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-3.5 h-3.5 text-[#0e6245]" />
-                      <span>I've Booked My Slot</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-
-                <a
-                  href={GOOGLE_CALENDAR_APPOINTMENT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-700 hover:text-gray-900 py-2.5 px-4 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 cursor-pointer transition-all shadow-sm"
-                >
-                  <span>New Tab</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-
-                <a
-                  href={PHONE_TEL}
-                  id="modal-step2-call-btn"
-                  title={`Call ${PHONE_NUMBER}`}
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#0e6245] hover:text-black py-2.5 px-3.5 rounded-full bg-[#f0fbf6] hover:bg-[#a3e6cd]/40 border border-[#a3e6cd] cursor-pointer transition-all shadow-sm active:scale-95"
-                >
-                  <Phone className="w-3.5 h-3.5 text-[#0e6245]" />
-                  <span>Call {PHONE_NUMBER}</span>
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(1)}
-                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 py-2.5 px-3 rounded-full bg-transparent hover:bg-gray-100 border border-gray-200 cursor-pointer transition-all"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                  <span>Edit Info</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Call Expectations Banner */}
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-2">
-              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-gray-900">
-                <Sparkles className="w-4 h-4 text-[#0e6245]" />
-                <span>What to Expect From Your Call:</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs text-gray-700">
-                <div className="bg-white p-2.5 rounded-xl border border-gray-200/80 shadow-xs">
-                  <span className="font-bold text-[#0e6245] block text-[11px] mb-0.5">1. Growth Audit</span>
-                  <span className="text-gray-600 text-[11px] leading-snug block">Review your current acquisition channels and conversion bottlenecks.</span>
-                </div>
-                <div className="bg-white p-2.5 rounded-xl border border-gray-200/80 shadow-xs">
-                  <span className="font-bold text-[#0e6245] block text-[11px] mb-0.5">2. Custom Automation Blueprint</span>
-                  <span className="text-gray-600 text-[11px] leading-snug block">Identify high-ROI PPC campaigns and AI workflow opportunities.</span>
-                </div>
-                <div className="bg-white p-2.5 rounded-xl border border-gray-200/80 shadow-xs">
-                  <span className="font-bold text-[#0e6245] block text-[11px] mb-0.5">3. Clear Strategy & Action Steps</span>
-                  <span className="text-gray-600 text-[11px] leading-snug block">They will leave the call with a clear strategy and action steps.</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Instruction Notice Banner */}
-            <div className="bg-[#f0fbf6] border border-[#a3e6cd] rounded-xl p-3.5 flex items-center justify-between text-xs text-[#0e6245] font-medium">
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-[#0e6245] shrink-0" />
-                <span>Select your 30-minute growth strategy consultation slot below:</span>
-              </div>
               <button
                 type="button"
-                onClick={handleFinalizeModalBooking}
-                className="hidden sm:inline-flex items-center space-x-1 text-[11px] font-bold uppercase tracking-wider text-black underline hover:text-[#0e6245] cursor-pointer"
+                onClick={() => setCurrentStep(1)}
+                className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-700 hover:text-gray-900 py-2 px-3.5 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-300 cursor-pointer transition-all self-start sm:self-auto"
               >
-                <span>Finished? Click to redirect</span>
-                <ArrowRight className="w-3 h-3" />
+                <ChevronLeft className="w-4 h-4" />
+                <span>Edit Info</span>
               </button>
             </div>
 
-            {/* Google Calendar Appointment Scheduler Embed Container (100% width, min 720px height, 12px border-radius) */}
+            {/* Google Calendar Iframe */}
             <div 
-              className="w-full min-h-[720px] bg-white border border-gray-200 overflow-hidden relative shadow-sm"
-              style={{ width: '100%', minHeight: '720px', borderRadius: '12px' }}
+              className="w-full min-h-[720px] bg-white border border-gray-200 overflow-hidden relative shadow-sm rounded-2xl"
+              style={{ width: '100%', minHeight: '720px', borderRadius: '16px' }}
             >
               <iframe
                 src={GOOGLE_CALENDAR_EMBED_URL}
-                style={{ border: 0, width: '100%', minHeight: '720px', borderRadius: '12px' }}
+                style={{ border: 0, width: '100%', minHeight: '720px', borderRadius: '16px' }}
                 width="100%"
                 height="720px"
                 frameBorder="0"
@@ -596,7 +598,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
               <button
                 type="button"
                 id="modal-bottom-finalize-booking-btn"
-                onClick={handleFinalizeModalBooking}
+                onClick={() => handleFinalizeModalBooking()}
                 disabled={isFinalizing}
                 className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-3.5 px-6 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
               >

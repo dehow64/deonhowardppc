@@ -121,15 +121,19 @@ export async function scheduleGoogleWorkspaceAppointment(
     // 2. Create Event on Google Calendar
     try {
       const calendarEventBody = {
-        summary: `Strategy Session: ${clientName} (${data.companyName || 'Business Growth'})`,
+        summary: `Strategy Session: ${clientName} (${data.companyName || data.industry || 'Business Growth'})`,
         description: `Strategy Consultation Details:\n\n` +
           `• Client Name: ${clientName}\n` +
           `• Email: ${data.email}\n` +
           `• Phone: ${data.phone}\n` +
-          `• Company: ${data.companyName || 'N/A'}\n` +
-          `• Requested Solution: ${data.service || 'Marketing Automation System'}\n` +
-          `• Monthly Growth Budget: ${data.budget || 'Not specified'}\n` +
-          `• Strategic Goals / Notes: ${data.message || 'No additional notes provided'}\n\n` +
+          `• Website: ${data.website || 'N/A'}\n` +
+          `• Industry / Market: ${data.industry || data.companyName || 'N/A'}\n` +
+          (data.realEstateRole ? `• Real Estate Role: ${data.realEstateRole}\n` : '') +
+          `• Current Revenue: ${data.currentRevenue || 'Not specified'}\n` +
+          `• 90-Day Revenue Goal: ${data.revenueGoal90Day || 'Not specified'}\n` +
+          `• Monthly Ad Budget: ${data.budget || 'Not specified'}\n` +
+          `• Services Requested: ${data.service || 'Marketing Automation System'}\n` +
+          `• Project Description / Strategic Goals:\n${data.projectDescription || data.description || (data as any).project_description || (data as any).details || data.message || 'No additional notes provided'}\n\n` +
           `Assigned Specialist: Deon Howard (${TARGET_ADMIN_EMAIL})\n` +
           `Meeting Format: Google Meet / Online Strategy Call`,
         start: {
@@ -185,7 +189,7 @@ export async function scheduleGoogleWorkspaceAppointment(
 
     // 3. Send Email to Admin (deonhowardppc@gmail.com) via Gmail API
     try {
-      const adminEmailSubject = `🎯 New Strategy Call Booked: ${clientName} - ${data.companyName || data.service}`;
+      const adminEmailSubject = `🎯 New Strategy Call Booked: ${clientName} - ${data.companyName || data.industry || data.service}`;
       const adminEmailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
           <div style="background-color: #121212; padding: 24px; text-align: center;">
@@ -198,21 +202,25 @@ export async function scheduleGoogleWorkspaceAppointment(
             
             <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0;">
               <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                <tr><td style="padding: 6px 0; font-weight: bold; width: 140px; color: #475569;">Client:</td><td style="color: #0f172a;">${clientName}</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; width: 160px; color: #475569;">Client:</td><td style="color: #0f172a;">${clientName}</td></tr>
                 <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Email:</td><td><a href="mailto:${data.email}" style="color: #2563eb;">${data.email}</a></td></tr>
                 <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Phone:</td><td style="color: #0f172a;">${data.phone}</td></tr>
-                <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Company:</td><td style="color: #0f172a;">${data.companyName || 'Not specified'}</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Website:</td><td style="color: #0f172a;">${data.website || 'Not provided'}</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Industry / Market:</td><td style="color: #0f172a;">${data.industry || data.companyName || 'Not specified'}</td></tr>
+                ${data.realEstateRole ? `<tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Real Estate Role:</td><td style="color: #0f172a;">${data.realEstateRole}</td></tr>` : ''}
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Current Revenue:</td><td style="color: #0f172a; font-weight: bold;">${data.currentRevenue || 'Not specified'}</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">90-Day Revenue Goal:</td><td style="color: #0f172a; font-weight: bold;">${data.revenueGoal90Day || 'Not specified'}</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Monthly Ad Budget:</td><td style="color: #0f172a; font-weight: bold;">${data.budget || 'Not specified'}</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Services Requested:</td><td style="color: #0f172a; font-weight: bold;">${data.service || 'Automation Consultation'}</td></tr>
                 <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Date & Time:</td><td style="color: #0f172a; font-weight: bold;">${startFormatted} (${data.selectedTimeSlot || '10:00 AM'})</td></tr>
-                <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Service:</td><td style="color: #0f172a;">${data.service || 'Automation Consultation'}</td></tr>
-                <tr><td style="padding: 6px 0; font-weight: bold; color: #475569;">Budget:</td><td style="color: #0f172a;">${data.budget || 'Not specified'}</td></tr>
               </table>
             </div>
 
             <div style="margin-top: 16px;">
-              <h4 style="margin: 0 0 6px 0; color: #334155; font-size: 13px; text-transform: uppercase;">Goals & Current Bottlenecks:</h4>
-              <p style="background-color: #f1f5f9; padding: 12px; border-radius: 6px; font-size: 14px; margin: 0; color: #334155;">
-                ${data.message || 'No additional project description provided.'}
-              </p>
+              <h4 style="margin: 0 0 6px 0; color: #065f46; font-size: 13px; text-transform: uppercase; font-weight: bold;">Project Description & Strategic Goals:</h4>
+              <div style="background-color: #f0fbf6; border: 1.5px solid #10b981; padding: 14px; border-radius: 8px; font-size: 14px; margin: 0; color: #1e293b; white-space: pre-wrap; font-weight: 500;">
+                ${data.projectDescription || data.description || (data as any).project_description || (data as any).details || data.message || 'No additional project description provided.'}
+              </div>
             </div>
 
             ${result.calendarEventLink ? `
