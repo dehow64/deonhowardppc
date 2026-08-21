@@ -181,7 +181,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#121212] font-sans selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-[#FAF9F6] text-[#121212] font-sans selection:bg-blue-600 selection:text-white">
       {isThankYouView ? (
         <ThankYouPage
           data={submissionSuccessData}

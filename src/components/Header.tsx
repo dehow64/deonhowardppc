@@ -124,12 +124,13 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
 
           {/* Header Right Actions */}
           <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Phone Link (Desktop/Tablet) */}
             <a
               href={PHONE_TEL}
               id="header-phone-link"
               onClick={handlePhoneClick}
               title={`Call ${PHONE_NUMBER}`}
-              className={`hidden sm:inline-flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer ${
+              className={`hidden md:inline-flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer ${
                 phoneClicked
                   ? 'bg-white text-black px-3.5 py-1.5 rounded-full shadow-md border border-[#9ce2c7] ring-2 ring-[#9ce2c7]/40'
                   : 'text-[#131d17] hover:text-black px-2.5 py-2 hover:bg-black/5 rounded-full'
@@ -148,16 +149,17 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
               )}
             </a>
 
+            {/* Book Now (Desktop/Tablet) */}
             <button
               id="header-book-now-btn"
               onClick={onBookClick}
-              className="bg-black hover:bg-gray-900 text-white font-bold text-xs uppercase tracking-widest px-3.5 sm:px-5 py-2.5 rounded-full transition-all duration-200 shadow-md flex items-center space-x-1.5 sm:space-x-2 cursor-pointer"
+              className="hidden sm:inline-flex bg-black hover:bg-gray-900 text-white font-bold text-xs uppercase tracking-widest px-4 sm:px-5 py-2.5 rounded-full transition-all duration-200 shadow-md items-center space-x-1.5 sm:space-x-2 cursor-pointer"
             >
               <Calendar className="w-3.5 h-3.5" />
               <span>Book Now</span>
             </button>
 
-            {/* WhatsApp Top Menu Button (Positioned between Book Now and Menu) */}
+            {/* WhatsApp Top Menu Button (Desktop/Tablet) */}
             <a
               href={WHATSAPP_URL}
               target="_blank"
@@ -165,17 +167,17 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
               id="header-whatsapp-btn"
               onClick={(e) => openWhatsAppChat("Hi Deon, I'm reaching out from your website header regarding Marketing Automation Systems.", e)}
               title="Chat on WhatsApp"
-              className="inline-flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#25D366] hover:bg-[#20ba59] border border-[#25D366] px-3 sm:px-3.5 py-2.5 rounded-full transition-all duration-200 shadow-md active:scale-95 cursor-pointer"
+              className="hidden sm:inline-flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#25D366] hover:bg-[#20ba59] border border-[#25D366] px-3.5 py-2.5 rounded-full transition-all duration-200 shadow-md active:scale-95 cursor-pointer"
             >
               <WhatsAppIcon className="w-4 h-4 fill-current text-white" />
-              <span className="hidden sm:inline">WhatsApp</span>
+              <span>WhatsApp</span>
             </a>
 
-            {/* Burger Trigger Button in Header */}
+            {/* Burger Trigger Button in Header (Always visible on mobile & desktop) */}
             <button
               id="header-burger-menu-btn"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="bg-black text-[#9ce2c7] hover:bg-gray-900 px-3.5 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-md cursor-pointer transition-all border border-black"
+              className="bg-black text-[#9ce2c7] hover:bg-gray-900 px-4 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-md cursor-pointer transition-all border border-black"
               aria-label="Toggle Navigation Menu"
             >
               {menuOpen ? <X className="w-4 h-4 text-[#9ce2c7]" /> : <Menu className="w-4 h-4 text-[#9ce2c7]" />}
@@ -185,8 +187,8 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
         </div>
       </header>
 
-      {/* Floating Burger & Scroll Controller that follows the user down the page */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-2">
+      {/* Floating Burger & Scroll Controller - Visible only on Desktop/Tablet (Hidden on mobile) */}
+      <div className="hidden md:flex fixed bottom-6 right-6 z-50 flex-col items-end space-y-2">
         {/* Quick Scroll Up/Down Buttons */}
         <div className="flex flex-col space-y-1 bg-black/90 p-1.5 rounded-2xl shadow-2xl backdrop-blur-md border border-[#9ce2c7]/40">
           <button
@@ -244,16 +246,17 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
             onClick={() => setMenuOpen(false)}
           />
 
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-md bg-[#121212] text-white border-l border-white/15 shadow-2xl flex flex-col justify-between p-6 sm:p-8 overflow-y-auto no-scrollbar">
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
+            <div className="w-screen max-w-md bg-[#121212] text-white border-l border-white/15 shadow-2xl flex flex-col justify-between p-5 sm:p-8 overflow-y-auto no-scrollbar">
               
-              {/* Drawer Top Header */}
-              <div>
-                <div className="flex items-center justify-between pb-6 border-b border-white/15">
+              {/* Drawer Content */}
+              <div className="space-y-6">
+                {/* Drawer Top Header */}
+                <div className="flex items-center justify-between pb-4 border-b border-white/15">
                   <div className="flex items-center space-x-2">
                     <Compass className="w-5 h-5 text-[#9ce2c7]" />
                     <span className="text-xs font-black uppercase tracking-[0.2em] text-[#9ce2c7]">
-                      Page Navigation
+                      Navigation & Quick Actions
                     </span>
                   </div>
 
@@ -266,10 +269,55 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                   </button>
                 </div>
 
+                {/* Primary Action Buttons AT THE TOP (Above Quick Scroll Menu) */}
+                <div className="space-y-2.5 pb-2">
+                  <button
+                    id="drawer-book-session-btn"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onBookClick();
+                    }}
+                    className="w-full bg-white hover:bg-gray-100 text-[#121212] font-black text-xs uppercase tracking-widest py-3.5 px-4 rounded-full transition-all shadow-xl cursor-pointer flex items-center justify-center space-x-2 active:scale-95"
+                  >
+                    <Calendar className="w-4 h-4 text-[#121212]" />
+                    <span>Book Strategy Session</span>
+                  </button>
+
+                  <a
+                    href={WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    id="mobile-drawer-whatsapp-btn"
+                    onClick={(e) => {
+                      openWhatsAppChat("Hi Deon, I'm reaching out from your navigation menu regarding Marketing Automation Systems.", e);
+                      setMenuOpen(false);
+                    }}
+                    title="Chat on WhatsApp"
+                    className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-white bg-[#25D366] hover:bg-[#20ba59] py-3 px-4 rounded-full transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    <WhatsAppIcon className="w-4 h-4 text-white" />
+                    <span>Strategy WhatsApp Chat</span>
+                  </a>
+
+                  <a
+                    href={PHONE_TEL}
+                    id="mobile-drawer-phone-btn"
+                    onClick={(e) => {
+                      handlePhoneCall(e);
+                      setMenuOpen(false);
+                    }}
+                    title={`Call ${PHONE_NUMBER}`}
+                    className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-black bg-[#9ce2c7] hover:bg-[#8bd6ba] py-3 px-4 rounded-full transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    <Phone className="w-4 h-4 text-black fill-current" />
+                    <span>Call {PHONE_NUMBER}</span>
+                  </a>
+                </div>
+
                 {/* Quick Scroll Up/Down Action Banner */}
-                <div className="my-6 p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
                   <div className="text-xs font-bold text-gray-300">
-                    <span className="block text-[10px] text-[#9ce2c7] font-mono uppercase">Quick Scroll</span>
+                    <span className="block text-[10px] text-[#9ce2c7] font-mono uppercase">Quick Scroll Menu</span>
                     Navigate page sections
                   </div>
 
@@ -280,7 +328,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                       title="Scroll Up"
                     >
                       <ArrowUp className="w-4 h-4" />
-                      <span className="hidden sm:inline">Up</span>
+                      <span className="text-xs font-bold">Up</span>
                     </button>
 
                     <button
@@ -289,7 +337,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                       title="Scroll Down"
                     >
                       <ArrowDown className="w-4 h-4" />
-                      <span className="hidden sm:inline">Down</span>
+                      <span className="text-xs font-bold">Down</span>
                     </button>
                   </div>
                 </div>
@@ -309,10 +357,10 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                           e.preventDefault();
                           handleNavClick(link);
                         }}
-                        className={`group flex items-center justify-between p-3.5 rounded-2xl transition-all ${
+                        className={`group flex items-center justify-between p-3 rounded-2xl transition-all ${
                           isActive
-                            ? 'bg-[#9ce2c7] text-[#121212] font-black shadow-lg pl-5'
-                            : 'text-gray-300 hover:bg-white/10 hover:text-white hover:pl-5'
+                            ? 'bg-[#9ce2c7] text-[#121212] font-black shadow-lg pl-4'
+                            : 'text-gray-300 hover:bg-white/10 hover:text-white hover:pl-4'
                         }`}
                       >
                         <div className="flex items-center space-x-3">
@@ -321,13 +369,13 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                           }`}>
                             {link.num}
                           </span>
-                          <span className="text-sm font-bold uppercase tracking-wider">
+                          <span className="text-xs font-bold uppercase tracking-wider">
                             {link.label}
                           </span>
                         </div>
 
                         {isActive && (
-                          <span className="text-[10px] font-black uppercase tracking-widest bg-black text-[#9ce2c7] px-2.5 py-1 rounded-full">
+                          <span className="text-[9px] font-black uppercase tracking-widest bg-black text-[#9ce2c7] px-2 py-0.5 rounded-full">
                             Current
                           </span>
                         )}
@@ -337,47 +385,9 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                 </nav>
               </div>
 
-              {/* Drawer Bottom Actions */}
-              <div className="pt-6 border-t border-white/15 space-y-3">
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  id="mobile-drawer-whatsapp-btn"
-                  onClick={(e) => {
-                    openWhatsAppChat("Hi Deon, I'm reaching out from your navigation menu regarding Marketing Automation Systems.", e);
-                    setMenuOpen(false);
-                  }}
-                  title="Chat on WhatsApp"
-                  className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-white bg-[#25D366] hover:bg-[#20ba59] py-3 px-4 rounded-full transition-all shadow-md active:scale-95 cursor-pointer"
-                >
-                  <WhatsAppIcon className="w-4 h-4 text-white" />
-                  <span>Chat on WhatsApp</span>
-                </a>
-
-                <a
-                  href={PHONE_TEL}
-                  id="mobile-drawer-phone-btn"
-                  onClick={(e) => {
-                    handlePhoneCall(e);
-                    setMenuOpen(false);
-                  }}
-                  title={`Call ${PHONE_NUMBER}`}
-                  className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-black bg-[#9ce2c7] hover:bg-[#8bd6ba] py-3 px-4 rounded-full transition-all shadow-md active:scale-95 cursor-pointer"
-                >
-                  <Phone className="w-4 h-4 text-black fill-current" />
-                  <span>Call {PHONE_NUMBER}</span>
-                </a>
-
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onBookClick();
-                  }}
-                  className="w-full bg-white hover:bg-gray-100 text-[#121212] font-black text-xs uppercase tracking-widest py-3.5 rounded-full transition-all shadow-xl cursor-pointer"
-                >
-                  Book Strategy Session
-                </button>
+              {/* Drawer Bottom Info */}
+              <div className="pt-6 mt-6 border-t border-white/10 text-center text-[11px] text-gray-500">
+                <span>Deon Howard PPC • Marketing Automation Systems</span>
               </div>
 
             </div>
