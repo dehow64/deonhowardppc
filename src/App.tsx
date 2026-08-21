@@ -181,102 +181,104 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-[#FAF9F6] text-[#121212] font-sans selection:bg-blue-600 selection:text-white">
-      {isThankYouView ? (
-        <ThankYouPage
-          data={submissionSuccessData}
-          onBackToMain={handleNavToMain}
-          onBrowseCaseStudies={() => {
-            handleNavToMain();
-            setTimeout(() => {
-              const el = document.getElementById('case-studies');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-          }}
-        />
-      ) : isPrivacyView ? (
-        <PrivacyPolicyPage
-          onBackToMain={handleNavToMain}
-          onBookClick={() => handleBookClick()}
-        />
-      ) : isAccessibilityView ? (
-        <AccessibilityStatementPage
-          onBackToMain={handleNavToMain}
-          onBookClick={() => handleBookClick()}
-        />
-      ) : activeIndustryView === 'real-estate' ? (
-        <RealEstateLandingPage
-          onBackToMain={handleNavToMain}
-          onBookClick={handleBookClick}
-          onFormSubmitted={handleFormSubmitted}
-          onSelectIndustry={handleSelectIndustry}
-        />
-      ) : activeIndustryView ? (
-        <IndustryLandingPage
-          industryId={activeIndustryView}
-          onBackToMain={handleNavToMain}
-          onBookClick={handleBookClick}
-          onFormSubmitted={handleFormSubmitted}
-          onSelectIndustry={handleSelectIndustry}
-        />
-      ) : (
-        <>
-          {/* Header Bar */}
-          <Header 
-            onBookClick={handleBookClick} 
-            onRealEstateClick={() => handleSelectIndustry('real-estate')} 
+    <div className="min-h-screen w-full overflow-x-auto bg-[#FAF9F6] text-[#121212] font-sans selection:bg-blue-600 selection:text-white">
+      <div className="w-full min-w-[103vw] sm:min-w-full px-1.5 sm:px-0 mx-auto">
+        {isThankYouView ? (
+          <ThankYouPage
+            data={submissionSuccessData}
+            onBackToMain={handleNavToMain}
+            onBrowseCaseStudies={() => {
+              handleNavToMain();
+              setTimeout(() => {
+                const el = document.getElementById('case-studies');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }}
           />
-
-          {/* Main Content Sections matching Wix layout and video walkthrough */}
-          <main>
-            {/* Hero Section & Booking Widget */}
-            <Hero onBookClick={handleBookClick} />
-
-            {/* Is Your Business Struggling to Grow Online? */}
-            <StrugglingSection />
-
-            {/* About Deon Howard PPC */}
-            <AboutSection />
-
-            {/* Benefits of Digital Marketing */}
-            <BenefitsSection />
-
-            {/* Business Objectives Supported */}
-            <ObjectivesSection />
-
-            {/* Curious to Learn More? */}
-            <CuriousCallout onBookClick={handleBookClick} />
-
-            {/* Industries Supported */}
-            <IndustriesSection 
+        ) : isPrivacyView ? (
+          <PrivacyPolicyPage
+            onBackToMain={handleNavToMain}
+            onBookClick={() => handleBookClick()}
+          />
+        ) : isAccessibilityView ? (
+          <AccessibilityStatementPage
+            onBackToMain={handleNavToMain}
+            onBookClick={() => handleBookClick()}
+          />
+        ) : activeIndustryView === 'real-estate' ? (
+          <RealEstateLandingPage
+            onBackToMain={handleNavToMain}
+            onBookClick={handleBookClick}
+            onFormSubmitted={handleFormSubmitted}
+            onSelectIndustry={handleSelectIndustry}
+          />
+        ) : activeIndustryView ? (
+          <IndustryLandingPage
+            industryId={activeIndustryView}
+            onBackToMain={handleNavToMain}
+            onBookClick={handleBookClick}
+            onFormSubmitted={handleFormSubmitted}
+            onSelectIndustry={handleSelectIndustry}
+          />
+        ) : (
+          <>
+            {/* Header Bar */}
+            <Header 
               onBookClick={handleBookClick} 
-              onSelectIndustry={handleSelectIndustry} 
+              onRealEstateClick={() => handleSelectIndustry('real-estate')} 
             />
 
-            {/* Services & Platforms */}
-            <ServicesSection />
+            {/* Main Content Sections matching Wix layout and video walkthrough */}
+            <main>
+              {/* Hero Section & Booking Widget */}
+              <Hero onBookClick={handleBookClick} />
 
-            {/* Get Your Custom Growth Strategy Phone CTA */}
-            <CalloutBanner />
+              {/* Is Your Business Struggling to Grow Online? */}
+              <StrugglingSection />
 
-            {/* A Proven Process for Predictable Growth */}
-            <ProcessSection />
+              {/* About Deon Howard PPC */}
+              <AboutSection />
 
-            {/* Case Studies */}
-            <CaseStudiesSection onSelectCaseStudy={(study) => setSelectedCaseStudy(study)} />
+              {/* Benefits of Digital Marketing */}
+              <BenefitsSection />
 
-            {/* Ready to Grow Your Business... Contact & Calendar Booking */}
-            <ContactFormSection onFormSubmitted={handleFormSubmitted} />
-          </main>
+              {/* Business Objectives Supported */}
+              <ObjectivesSection />
 
-          {/* Footer */}
-          <Footer
-            onSelectIndustry={handleSelectIndustry}
-            onSelectPrivacy={handleNavToPrivacy}
-            onSelectAccessibility={handleNavToAccessibility}
-          />
-        </>
-      )}
+              {/* Curious to Learn More? */}
+              <CuriousCallout onBookClick={handleBookClick} />
+
+              {/* Industries Supported */}
+              <IndustriesSection 
+                onBookClick={handleBookClick} 
+                onSelectIndustry={handleSelectIndustry} 
+              />
+
+              {/* Services & Platforms */}
+              <ServicesSection />
+
+              {/* Get Your Custom Growth Strategy Phone CTA */}
+              <CalloutBanner />
+
+              {/* A Proven Process for Predictable Growth */}
+              <ProcessSection />
+
+              {/* Case Studies */}
+              <CaseStudiesSection onSelectCaseStudy={(study) => setSelectedCaseStudy(study)} />
+
+              {/* Ready to Grow Your Business... Contact & Calendar Booking */}
+              <ContactFormSection onFormSubmitted={handleFormSubmitted} />
+            </main>
+
+            {/* Footer */}
+            <Footer
+              onSelectIndustry={handleSelectIndustry}
+              onSelectPrivacy={handleNavToPrivacy}
+              onSelectAccessibility={handleNavToAccessibility}
+            />
+          </>
+        )}
+      </div>
 
       {/* Interactive Popup Modals */}
       <BookingModal

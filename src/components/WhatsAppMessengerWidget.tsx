@@ -72,10 +72,10 @@ export const WhatsAppMessengerWidget: React.FC = () => {
 
   return (
     <>
-      {/* Side Messenger Floating Dock - Visible on Desktop/Tablet, hidden on mobile for pure vertical layout */}
+      {/* Side Messenger Floating Dock - Present on both Mobile & Desktop */}
       <div 
         id="whatsapp-scrolling-messenger-container" 
-        className="hidden md:flex fixed bottom-6 left-6 z-50 flex-col items-start pointer-events-auto select-none"
+        className="fixed bottom-4 left-3 sm:bottom-6 sm:left-6 z-50 flex flex-col items-start pointer-events-auto select-none"
       >
         {/* Expanded Messenger Menu Window */}
         {isOpen && (

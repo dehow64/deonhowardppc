@@ -187,26 +187,26 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
         </div>
       </header>
 
-      {/* Floating Burger & Scroll Controller - Visible only on Desktop/Tablet (Hidden on mobile) */}
-      <div className="hidden md:flex fixed bottom-6 right-6 z-50 flex-col items-end space-y-2">
+      {/* Floating Burger & Scroll Controller - Present on both Mobile & Desktop */}
+      <div className="fixed bottom-4 right-3 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end space-y-2">
         {/* Quick Scroll Up/Down Buttons */}
-        <div className="flex flex-col space-y-1 bg-black/90 p-1.5 rounded-2xl shadow-2xl backdrop-blur-md border border-[#9ce2c7]/40">
+        <div className="flex flex-col space-y-1 bg-black/90 p-1 sm:p-1.5 rounded-2xl shadow-2xl backdrop-blur-md border border-[#9ce2c7]/40">
           <button
             onClick={handleScrollUp}
             id="floating-scroll-up-btn"
             title="Scroll Up / Previous Section"
-            className="p-2 text-[#9ce2c7] hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+            className="p-1.5 sm:p-2 text-[#9ce2c7] hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-95"
           >
-            <ChevronUp className="w-5 h-5" />
+            <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
           <button
             onClick={handleScrollDown}
             id="floating-scroll-down-btn"
             title="Scroll Down / Next Section"
-            className="p-2 text-[#9ce2c7] hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+            className="p-1.5 sm:p-2 text-[#9ce2c7] hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-95"
           >
-            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
@@ -214,7 +214,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
         <button
           id="floating-burger-menu-btn"
           onClick={() => setMenuOpen(!menuOpen)}
-          className={`flex items-center space-x-2.5 px-4 sm:px-5 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl transition-all duration-300 border-2 cursor-pointer ${
+          className={`flex items-center space-x-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl transition-all duration-300 border-2 cursor-pointer active:scale-95 ${
             menuOpen
               ? 'bg-[#9ce2c7] text-black border-black scale-105'
               : 'bg-black text-[#9ce2c7] border-[#9ce2c7] hover:bg-gray-900 hover:scale-105'
@@ -222,12 +222,12 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
         >
           {menuOpen ? (
             <>
-              <X className="w-5 h-5 text-black" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
               <span>Close</span>
             </>
           ) : (
             <>
-              <Menu className="w-5 h-5 text-[#9ce2c7]" />
+              <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-[#9ce2c7]" />
               <span>Menu</span>
               {scrolled && (
                 <span className="w-2 h-2 rounded-full bg-[#9ce2c7] animate-pulse ml-0.5" />
