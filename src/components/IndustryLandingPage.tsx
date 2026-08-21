@@ -47,6 +47,7 @@ import { handlePhoneCall } from '../utils/phone';
 import { getUpcomingBookingDays, getTodayFormatted } from '../utils/dateUtils';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { openWhatsAppChat, formatLeadToWhatsAppMessage } from '../utils/whatsapp';
+import { trackFormStepCompleted } from '../utils/analytics';
 const TARGET_ADMIN_EMAIL = 'deonhowardppc@gmail.com';
 import { IndustrySubNav } from './IndustrySubNav';
 import { submitToGoogleScript } from '../services/googleScript';
@@ -1081,6 +1082,9 @@ export const IndustryLandingPage: React.FC<IndustryLandingPageProps> = ({
     };
 
     setSavedLeadData(submissionPayload);
+
+    // Track Step 1 completion in GA4
+    trackFormStepCompleted(1, `${config.title} Lead Qualification`, `${config.title} Funnel`);
 
     // Smoothly transition to STEP 2 (Embedded Calendar) without making any network requests yet
     setIndStep(2);

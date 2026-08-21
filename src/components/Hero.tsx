@@ -214,7 +214,7 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
                     <a
                       href={PHONE_TEL}
                       id="hero-direct-phone-btn"
-                      onClick={handlePhoneCall}
+                      onClick={(e) => handlePhoneCall(e, 'hero')}
                       title={`Call ${PHONE_NUMBER}`}
                       className="inline-flex items-center space-x-1.5 uppercase tracking-wider text-[#131d17] hover:text-black font-bold text-[11px] bg-black/5 hover:bg-black/10 px-2.5 py-1 rounded-full transition-all active:scale-95 cursor-pointer"
                     >

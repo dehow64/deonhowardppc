@@ -31,6 +31,7 @@ import { INDUSTRY_OPTIONS, SERVICE_OPTIONS } from './ContactFormSection';
 import { getUpcomingBookingDays, getTodayFormatted } from '../utils/dateUtils';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { openWhatsAppChat, formatLeadToWhatsAppMessage } from '../utils/whatsapp';
+import { trackFormStepCompleted } from '../utils/analytics';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -240,6 +241,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     };
 
     setSavedLeadData(submissionData);
+
+    // Track Step 1 completion in GA4
+    trackFormStepCompleted(1, 'Lead Intake Form', 'Booking Modal Funnel');
 
     // Smoothly transition to STEP 2 (Embedded Calendar) without making any network requests yet
     setCurrentStep(2);
@@ -632,7 +636,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   rel="noopener noreferrer"
                   onClick={(e) => {
                     const msg = `Hi Deon, I'm booking a session on your calendar modal and want to connect via WhatsApp.`;
-                    openWhatsAppChat(msg, e);
+                    openWhatsAppChat(msg, e, 'booking_modal');
                   }}
                   title="Chat on WhatsApp"
                   className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold uppercase tracking-wider text-xs py-3.5 px-5 rounded-full transition-all shadow-xl active:scale-95 cursor-pointer"

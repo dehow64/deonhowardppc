@@ -28,6 +28,7 @@ import { PHONE_NUMBER, PHONE_TEL, WHATSAPP_NUMBER, WHATSAPP_URL, GOOGLE_CALENDAR
 import { getUpcomingBookingDays, getTodayFormatted } from '../utils/dateUtils';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { openWhatsAppChat, formatLeadToWhatsAppMessage } from '../utils/whatsapp';
+import { trackFormStepCompleted } from '../utils/analytics';
 
 interface ContactFormSectionProps {
   onFormSubmitted?: (data: ContactFormData) => void;
@@ -249,6 +250,9 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
     };
 
     setSubmittedLeadData(leadPayload);
+
+    // Track Step 1 completion in GA4
+    trackFormStepCompleted(1, 'Lead Qualification Form', 'Main Page Funnel');
 
     // Smoothly transition to STEP 2 (Embedded Calendar) without making any network requests yet
     setCurrentStep(2);
@@ -735,7 +739,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   rel="noopener noreferrer"
                   onClick={(e) => {
                     const msg = `Hi Deon, I'm currently on the calendar scheduler and would like to confirm my consultation booking with you via WhatsApp.`;
-                    openWhatsAppChat(msg, e);
+                    openWhatsAppChat(msg, e, 'contact_form_fallback');
                   }}
                   title="Confirm on WhatsApp"
                   className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold uppercase tracking-wider text-xs py-4 px-6 rounded-full transition-all shadow-xl active:scale-95 cursor-pointer"

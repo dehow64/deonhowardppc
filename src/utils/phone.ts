@@ -1,5 +1,6 @@
 import React from 'react';
 import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
+import { trackPhoneCall, PhonePlacement } from './analytics';
 
 export const isMobileDevice = (): boolean => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
@@ -12,15 +13,19 @@ export const isMobileDevice = (): boolean => {
  * Handles desktop Google Voice / browser extensions gracefully by:
  * 1. Preventing top-level window navigation that causes "voice.google.com refused to connect"
  * 2. Copying the phone number automatically to clipboard
- * 3. Opening the phone protocol through an isolated hidden iframe
- * 4. Dispatching a toast notification with interactive dialing & copy options
+ * 3. Tracking GA4 conversion event
+ * 4. Opening the phone protocol through an isolated hidden iframe
+ * 5. Dispatching a toast notification with interactive dialing & copy options
  */
-export const handlePhoneCall = (e?: React.MouseEvent): void => {
+export const handlePhoneCall = (e?: React.MouseEvent, placement: PhonePlacement = 'unknown'): void => {
   // Always prevent default anchor navigation to avoid destroying the app inside an iframe
   if (e) {
     if (typeof e.preventDefault === 'function') e.preventDefault();
     if (typeof e.stopPropagation === 'function') e.stopPropagation();
   }
+
+  // Track Phone Call Event in Google Analytics 4
+  trackPhoneCall(placement);
 
   // 1. Copy number to clipboard automatically as a reliable fallback
   if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
@@ -35,14 +40,13 @@ export const handlePhoneCall = (e?: React.MouseEvent): void => {
       detail: {
         number: PHONE_NUMBER,
         tel: PHONE_TEL,
-        isMobile: isMobileDevice()
+        isMobile: isMobileDevice(),
+        placement
       }
     }));
   }
 
-  // 3. Trigger protocol handler in an isolated hidden sandbox element so that
-  // any browser extension (like Google Voice, FaceTime, Skype) attempts to open without
-  // ever navigating or replacing the main application frame!
+  // 3. Trigger protocol handler in an isolated hidden sandbox element
   if (typeof document !== 'undefined') {
     try {
       let safeFrame = document.getElementById('safe-tel-trigger-frame') as HTMLIFrameElement | null;

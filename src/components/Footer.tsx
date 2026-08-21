@@ -71,7 +71,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <a
                   href={PHONE_TEL}
                   id="footer-phone-link"
-                  onClick={handlePhoneCall}
+                  onClick={(e) => handlePhoneCall(e, 'footer')}
                   title={`Call ${PHONE_NUMBER}`}
                   className="inline-flex items-center space-x-2.5 text-lg font-bold text-[#9ce2c7] hover:text-[#8bd6ba] hover:underline transition-colors active:scale-95 cursor-pointer"
                 >

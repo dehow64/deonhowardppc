@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, Sparkles, CheckCircle2, ChevronRight, Phone, Cl
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { WHATSAPP_NUMBER, WHATSAPP_RAW, WHATSAPP_URL } from '../data/contentData';
 import { buildWhatsAppUrl, openWhatsAppChat } from '../utils/whatsapp';
+import { trackWhatsAppPromptSelected } from '../utils/analytics';
 
 interface QuickPrompt {
   id: string;
@@ -60,13 +61,14 @@ export const WhatsAppMessengerWidget: React.FC = () => {
   const handleSendMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const textToSend = customMessage.trim() || "Hi Deon, I'm reaching out from your website regarding Marketing Automation Systems.";
-    openWhatsAppChat(textToSend);
+    openWhatsAppChat(textToSend, undefined, 'widget_custom_input');
     setIsOpen(false);
     setCustomMessage('');
   };
 
   const handleQuickPromptClick = (prompt: QuickPrompt) => {
-    openWhatsAppChat(prompt.message);
+    trackWhatsAppPromptSelected(prompt.id, prompt.label);
+    openWhatsAppChat(prompt.message, undefined, 'widget_quick_prompt');
     setIsOpen(false);
   };
 

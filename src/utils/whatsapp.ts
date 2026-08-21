@@ -1,5 +1,6 @@
 import React from 'react';
 import { WHATSAPP_RAW, WHATSAPP_NUMBER } from '../data/contentData';
+import { trackWhatsAppChat, WhatsAppPlacement } from './analytics';
 
 /**
  * Builds a direct WhatsApp chat URL with an encoded message.
@@ -13,15 +14,24 @@ export const buildWhatsAppUrl = (customMessage?: string): string => {
 };
 
 /**
- * Opens WhatsApp in a new tab or triggers the WhatsApp client.
+ * Opens WhatsApp in a new tab or triggers the WhatsApp client with GA4 event tracking.
  */
-export const openWhatsAppChat = (message?: string, event?: React.MouseEvent): void => {
+export const openWhatsAppChat = (
+  message?: string,
+  event?: React.MouseEvent,
+  placement: WhatsAppPlacement = 'unknown'
+): void => {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
 
-  const url = buildWhatsAppUrl(message || "Hi Deon, I'm interested in building a custom Marketing Automation System. Can we chat?");
+  const textToSend = message || "Hi Deon, I'm interested in building a custom Marketing Automation System. Can we chat?";
+  
+  // Track GA4 conversion event
+  trackWhatsAppChat(placement, textToSend);
+
+  const url = buildWhatsAppUrl(textToSend);
   
   if (typeof window !== 'undefined') {
     // Open in a new tab safely

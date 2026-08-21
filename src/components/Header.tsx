@@ -18,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
 
   const handlePhoneClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setPhoneClicked(true);
-    handlePhoneCall(e);
+    handlePhoneCall(e, 'header');
     setTimeout(() => {
       setPhoneClicked(false);
     }, 4500);
@@ -165,7 +165,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
               target="_blank"
               rel="noopener noreferrer"
               id="header-whatsapp-btn"
-              onClick={(e) => openWhatsAppChat("Hi Deon, I'm reaching out from your website header regarding Marketing Automation Systems.", e)}
+              onClick={(e) => openWhatsAppChat("Hi Deon, I'm reaching out from your website header regarding Marketing Automation Systems.", e, 'header')}
               title="Chat on WhatsApp"
               className="hidden sm:inline-flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#25D366] hover:bg-[#20ba59] border border-[#25D366] px-3.5 py-2.5 rounded-full transition-all duration-200 shadow-md active:scale-95 cursor-pointer"
             >
@@ -289,7 +289,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                     rel="noopener noreferrer"
                     id="mobile-drawer-whatsapp-btn"
                     onClick={(e) => {
-                      openWhatsAppChat("Hi Deon, I'm reaching out from your navigation menu regarding Marketing Automation Systems.", e);
+                      openWhatsAppChat("Hi Deon, I'm reaching out from your navigation menu regarding Marketing Automation Systems.", e, 'mobile_drawer');
                       setMenuOpen(false);
                     }}
                     title="Chat on WhatsApp"
@@ -303,7 +303,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                     href={PHONE_TEL}
                     id="mobile-drawer-phone-btn"
                     onClick={(e) => {
-                      handlePhoneCall(e);
+                      handlePhoneCall(e, 'mobile_drawer');
                       setMenuOpen(false);
                     }}
                     title={`Call ${PHONE_NUMBER}`}

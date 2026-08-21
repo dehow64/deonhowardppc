@@ -16,19 +16,12 @@ import { TARGET_ADMIN_EMAIL, scheduleGoogleWorkspaceAppointment } from '../servi
 import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
 import { handlePhoneCall } from '../utils/phone';
 import { getTodayFormatted } from '../utils/dateUtils';
+import { trackLeadSubmission } from '../utils/analytics';
 
 interface ThankYouPageProps {
   data: ContactFormData | null;
   onBackToMain: () => void;
   onBrowseCaseStudies?: () => void;
-}
-
-declare global {
-  interface Window {
-    dataLayer?: any[];
-    gtag?: (...args: any[]) => void;
-    fbq?: (...args: any[]) => void;
-  }
 }
 
 export const ThankYouPage: React.FC<ThankYouPageProps> = ({
@@ -119,38 +112,8 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
         console.warn('Workspace appointment notification status:', err);
       });
 
-      // 1. Data Layer Push for GTM / Google Analytics 4
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        event: 'lead_form_submitted',
-        event_category: 'Consultation Booking',
-        event_label: fullPayload.service,
-        value: 1.0,
-        currency: 'USD',
-        lead_name: `${fullPayload.firstName} ${fullPayload.lastName}`.trim(),
-        lead_email: fullPayload.email,
-        lead_service: fullPayload.service,
-        lead_date: fullPayload.selectedDate,
-        lead_time: fullPayload.selectedTimeSlot
-      });
-
-      // 2. Direct gtag call if Google Tag is present
-      if (typeof window.gtag === 'function') {
-        window.gtag('event', 'generate_lead', {
-          value: 1.0,
-          currency: 'USD',
-          event_label: fullPayload.service
-        });
-      }
-
-      // 3. Meta / Facebook Pixel Lead event if present
-      if (typeof window.fbq === 'function') {
-        window.fbq('track', 'Lead', {
-          content_name: fullPayload.service,
-          currency: 'USD',
-          value: 1.0
-        });
-      }
+      // Track Google Analytics 4 & GTM Lead Submission
+      trackLeadSubmission(fullPayload);
     } catch (err) {
       console.error('Error processing thank you lead:', err);
     }
@@ -409,7 +372,7 @@ export const ThankYouPage: React.FC<ThankYouPageProps> = ({
           <a
             href={PHONE_TEL}
             id="thankyou-phone-btn"
-            onClick={handlePhoneCall}
+            onClick={(e) => handlePhoneCall(e, 'thank_you_page')}
             title={`Call ${PHONE_NUMBER}`}
             className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider py-4 px-6 rounded-full transition-all border border-white/15 text-center flex items-center justify-center space-x-2 cursor-pointer active:scale-95 shadow-md"
           >
