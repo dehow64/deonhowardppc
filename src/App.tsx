@@ -26,6 +26,7 @@ import { IndustryLandingPage } from './components/IndustryLandingPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { AccessibilityStatementPage } from './components/AccessibilityStatementPage';
 import { PhoneCallToast } from './components/PhoneCallToast';
+import { WhatsAppMessengerWidget } from './components/WhatsAppMessengerWidget';
 import { CaseStudy, ContactFormData } from './types';
 import { getIndustryFromPath, getPathForIndustry, getPageTitle, isThankYouPage, isPrivacyPolicyPage, isAccessibilityPage } from './utils/routes';
 
@@ -293,6 +294,7 @@ export default function App() {
       />
 
       <PhoneCallToast />
+      <WhatsAppMessengerWidget />
     </div>
   );
 }

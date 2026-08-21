@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, ArrowLeft, CheckCircle2, Accessibility, ShieldCheck, Mail, Phone, ExternalLink, HelpCircle, Check } from 'lucide-react';
-import { PHONE_NUMBER, PHONE_TEL, EMAIL_ADDRESS } from '../data/contentData';
+import { PHONE_NUMBER, PHONE_TEL, EMAIL_ADDRESS, WHATSAPP_NUMBER, WHATSAPP_URL } from '../data/contentData';
 import { handlePhoneCall } from '../utils/phone';
+import { WhatsAppIcon } from './WhatsAppIcon';
+import { openWhatsAppChat } from '../utils/whatsapp';
 
 interface AccessibilityStatementPageProps {
   onBackToMain: () => void;
@@ -62,7 +64,21 @@ export const AccessibilityStatementPage: React.FC<AccessibilityStatementPageProp
             <span>Back to Home</span>
           </button>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* WhatsApp Top Button */}
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              id="accessibility-header-whatsapp"
+              onClick={(e) => openWhatsAppChat("Hi Deon, I'm reviewing your Accessibility Statement and would like to chat regarding Marketing Automation.", e)}
+              title="Chat on WhatsApp"
+              className="inline-flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider text-[#0e5c3e] bg-[#25D366]/20 hover:bg-[#25D366] hover:text-white border border-[#25D366]/40 px-3 py-1.5 rounded-full transition-all duration-200 shadow-sm active:scale-95 cursor-pointer"
+            >
+              <WhatsAppIcon className="w-3.5 h-3.5 fill-current" />
+              <span>WhatsApp</span>
+            </a>
+
             <a
               href={PHONE_TEL}
               onClick={handlePhoneClick}

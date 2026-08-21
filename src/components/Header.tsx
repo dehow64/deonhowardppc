@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, Menu, X, Calendar, ChevronUp, ChevronDown, ArrowUp, ArrowDown, Compass, Check } from 'lucide-react';
-import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
+import { PHONE_NUMBER, PHONE_TEL, WHATSAPP_NUMBER, WHATSAPP_URL } from '../data/contentData';
 import { handlePhoneCall } from '../utils/phone';
+import { WhatsAppIcon } from './WhatsAppIcon';
+import { openWhatsAppChat } from '../utils/whatsapp';
 
 interface HeaderProps {
   onBookClick: () => void;
@@ -121,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
           </a>
 
           {/* Header Right Actions */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <a
               href={PHONE_TEL}
               id="header-phone-link"
@@ -149,11 +151,25 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
             <button
               id="header-book-now-btn"
               onClick={onBookClick}
-              className="bg-black hover:bg-gray-900 text-white font-bold text-xs uppercase tracking-widest px-4 sm:px-5 py-2.5 rounded-full transition-all duration-200 shadow-md flex items-center space-x-2 cursor-pointer"
+              className="bg-black hover:bg-gray-900 text-white font-bold text-xs uppercase tracking-widest px-3.5 sm:px-5 py-2.5 rounded-full transition-all duration-200 shadow-md flex items-center space-x-1.5 sm:space-x-2 cursor-pointer"
             >
               <Calendar className="w-3.5 h-3.5" />
               <span>Book Now</span>
             </button>
+
+            {/* WhatsApp Top Menu Button (Positioned between Book Now and Menu) */}
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              id="header-whatsapp-btn"
+              onClick={(e) => openWhatsAppChat("Hi Deon, I'm reaching out from your website header regarding Marketing Automation Systems.", e)}
+              title="Chat on WhatsApp"
+              className="inline-flex items-center space-x-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#25D366] hover:bg-[#20ba59] border border-[#25D366] px-3 sm:px-3.5 py-2.5 rounded-full transition-all duration-200 shadow-md active:scale-95 cursor-pointer"
+            >
+              <WhatsAppIcon className="w-4 h-4 fill-current text-white" />
+              <span className="hidden sm:inline">WhatsApp</span>
+            </a>
 
             {/* Burger Trigger Button in Header */}
             <button
@@ -324,6 +340,22 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
               {/* Drawer Bottom Actions */}
               <div className="pt-6 border-t border-white/15 space-y-3">
                 <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  id="mobile-drawer-whatsapp-btn"
+                  onClick={(e) => {
+                    openWhatsAppChat("Hi Deon, I'm reaching out from your navigation menu regarding Marketing Automation Systems.", e);
+                    setMenuOpen(false);
+                  }}
+                  title="Chat on WhatsApp"
+                  className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-wider text-white bg-[#25D366] hover:bg-[#20ba59] py-3 px-4 rounded-full transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  <WhatsAppIcon className="w-4 h-4 text-white" />
+                  <span>Chat on WhatsApp</span>
+                </a>
+
+                <a
                   href={PHONE_TEL}
                   id="mobile-drawer-phone-btn"
                   onClick={(e) => {
@@ -342,7 +374,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
                     setMenuOpen(false);
                     onBookClick();
                   }}
-                  className="w-full bg-[#9ce2c7] hover:bg-[#8bd6ba] text-[#121212] font-black text-xs uppercase tracking-widest py-3.5 rounded-full transition-all shadow-xl cursor-pointer"
+                  className="w-full bg-white hover:bg-gray-100 text-[#121212] font-black text-xs uppercase tracking-widest py-3.5 rounded-full transition-all shadow-xl cursor-pointer"
                 >
                   Book Strategy Session
                 </button>

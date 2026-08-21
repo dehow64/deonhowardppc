@@ -25,10 +25,12 @@ import {
 } from 'lucide-react';
 import { submitToGoogleScript } from '../services/googleScript';
 import { scheduleGoogleWorkspaceAppointment, TARGET_ADMIN_EMAIL } from '../services/googleWorkspace';
-import { PHONE_NUMBER, PHONE_TEL, GOOGLE_CALENDAR_APPOINTMENT_URL, GOOGLE_CALENDAR_EMBED_URL } from '../data/contentData';
+import { PHONE_NUMBER, PHONE_TEL, WHATSAPP_NUMBER, WHATSAPP_URL, GOOGLE_CALENDAR_APPOINTMENT_URL, GOOGLE_CALENDAR_EMBED_URL } from '../data/contentData';
 import { ContactFormData } from '../types';
 import { INDUSTRY_OPTIONS, SERVICE_OPTIONS } from './ContactFormSection';
 import { getUpcomingBookingDays, getTodayFormatted } from '../utils/dateUtils';
+import { WhatsAppIcon } from './WhatsAppIcon';
+import { openWhatsAppChat, formatLeadToWhatsAppMessage } from '../utils/whatsapp';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -535,6 +537,34 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <span>Next: Select Date & Time</span>
                 <ArrowRight className="w-4 h-4 stroke-[3]" />
               </button>
+
+              {/* WhatsApp Quick Inquiry Button */}
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    const msg = formatLeadToWhatsAppMessage({
+                      firstName,
+                      lastName,
+                      companyName,
+                      email,
+                      phone,
+                      website,
+                      industry: industry === 'Other' ? otherIndustry : industry,
+                      services: selectedServices,
+                      adBudget,
+                      currentRevenue,
+                      projectDescription
+                    });
+                    openWhatsAppChat(msg, e);
+                  }}
+                  title="Inquire via WhatsApp"
+                  className="w-full inline-flex items-center justify-center space-x-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold uppercase tracking-wider text-xs py-3 px-6 rounded-full transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  <WhatsAppIcon className="w-4 h-4 text-white" />
+                  <span>Or Inquire via WhatsApp</span>
+                </button>
+              </div>
             </form>
           </div>
         ) : (
@@ -595,25 +625,42 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 </p>
               </div>
 
-              <button
-                type="button"
-                id="modal-bottom-finalize-booking-btn"
-                onClick={() => handleFinalizeModalBooking()}
-                disabled={isFinalizing}
-                className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-3.5 px-6 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
-              >
-                {isFinalizing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-black" />
-                    <span>Redirecting...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>I've Completed My Booking → Continue</span>
-                    <ArrowRight className="w-4 h-4 stroke-[3]" />
-                  </>
-                )}
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    const msg = `Hi Deon, I'm booking a session on your calendar modal and want to connect via WhatsApp.`;
+                    openWhatsAppChat(msg, e);
+                  }}
+                  title="Chat on WhatsApp"
+                  className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold uppercase tracking-wider text-xs py-3.5 px-5 rounded-full transition-all shadow-xl active:scale-95 cursor-pointer"
+                >
+                  <WhatsAppIcon className="w-4 h-4 text-white" />
+                  <span>WhatsApp</span>
+                </a>
+
+                <button
+                  type="button"
+                  id="modal-bottom-finalize-booking-btn"
+                  onClick={() => handleFinalizeModalBooking()}
+                  disabled={isFinalizing}
+                  className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-3.5 px-6 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
+                >
+                  {isFinalizing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-black" />
+                      <span>Redirecting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>I've Completed My Booking → Continue</span>
+                      <ArrowRight className="w-4 h-4 stroke-[3]" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}

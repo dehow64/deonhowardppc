@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, Check, Copy, X } from 'lucide-react';
+import { Phone, Check, Copy, X, ExternalLink } from 'lucide-react';
 import { PHONE_NUMBER, PHONE_TEL } from '../data/contentData';
+import { handlePhoneCall } from '../utils/phone';
 
 export const PhoneCallToast: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,6 +31,8 @@ export const PhoneCallToast: React.FC = () => {
     }
   };
 
+  const googleVoiceUrl = "https://voice.google.com/u/0/calls?a=nc,%2B17863614886";
+
   return (
     <div
       id="phone-call-toast"
@@ -49,28 +52,44 @@ export const PhoneCallToast: React.FC = () => {
             )}
           </div>
           <p className="text-xs text-gray-600 mt-0.5">
-            Direct line to Deon Howard. Number copied to your clipboard.
+            Direct line to Deon Howard. Number copied to clipboard.
           </p>
-          <div className="flex items-center gap-2 mt-3">
-            <a
-              href={PHONE_TEL}
+          
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <button
+              type="button"
               id="phone-toast-dial-btn"
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#131d17] hover:bg-black text-white text-xs font-bold rounded-lg transition-colors shadow-sm active:scale-95"
+              onClick={(e) => handlePhoneCall(e)}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#131d17] hover:bg-black text-white text-xs font-bold rounded-lg transition-colors shadow-sm active:scale-95 cursor-pointer"
             >
               <Phone className="w-3.5 h-3.5 text-[#9ce2c7]" />
               <span>Launch Dialer</span>
-            </a>
+            </button>
+
             <button
               type="button"
               id="phone-toast-copy-btn"
               onClick={handleCopy}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors active:scale-95"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors active:scale-95 cursor-pointer"
             >
               <Copy className="w-3.5 h-3.5 text-gray-500" />
-              <span>Copy Number</span>
+              <span>{copied ? 'Copied!' : 'Copy'}</span>
             </button>
+
+            <a
+              href={googleVoiceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              id="phone-toast-gvoice-btn"
+              title="Open Google Voice in new tab"
+              className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
+            >
+              <span>Google Voice</span>
+              <ExternalLink className="w-3 h-3 text-gray-400" />
+            </a>
           </div>
         </div>
+
         <button
           type="button"
           id="phone-toast-close-btn"
@@ -84,3 +103,4 @@ export const PhoneCallToast: React.FC = () => {
     </div>
   );
 };
+

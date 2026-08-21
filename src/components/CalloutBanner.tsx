@@ -21,7 +21,7 @@ export const CalloutBanner: React.FC = () => {
           >
             <AnimatedImage
               src={CALLOUT_PHONE_IMG}
-              alt="Consultant on growth strategy call"
+              alt="Professional on a strategy phone call"
               className="w-full h-full object-cover rounded-full"
               wrapperClassName="w-full h-full rounded-full"
               scale={false}

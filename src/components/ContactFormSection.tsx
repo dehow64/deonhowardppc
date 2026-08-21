@@ -24,8 +24,10 @@ import {
 } from 'lucide-react';
 import { ContactFormData } from '../types';
 import { scheduleGoogleWorkspaceAppointment, TARGET_ADMIN_EMAIL } from '../services/googleWorkspace';
-import { PHONE_NUMBER, PHONE_TEL, GOOGLE_CALENDAR_APPOINTMENT_URL, GOOGLE_CALENDAR_EMBED_URL } from '../data/contentData';
+import { PHONE_NUMBER, PHONE_TEL, WHATSAPP_NUMBER, WHATSAPP_URL, GOOGLE_CALENDAR_APPOINTMENT_URL, GOOGLE_CALENDAR_EMBED_URL } from '../data/contentData';
 import { getUpcomingBookingDays, getTodayFormatted } from '../utils/dateUtils';
+import { WhatsAppIcon } from './WhatsAppIcon';
+import { openWhatsAppChat, formatLeadToWhatsAppMessage } from '../utils/whatsapp';
 
 interface ContactFormSectionProps {
   onFormSubmitted?: (data: ContactFormData) => void;
@@ -621,7 +623,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
               </div>
 
               {/* Step 1 Submit CTA */}
-              <div className="pt-2 text-center">
+              <div className="pt-2 text-center space-y-3">
                 <button
                   type="submit"
                   id="submit-general-qual-btn"
@@ -630,6 +632,35 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                   <span>Next: Select Date & Time</span>
                   <ArrowRight className="w-4 h-4 text-[#9ce2c7]" />
                 </button>
+
+                {/* WhatsApp Alternative Direct Submit Button */}
+                <div className="flex items-center justify-center">
+                  <button
+                    type="button"
+                    id="submit-whatsapp-direct-btn"
+                    onClick={(e) => {
+                      const msg = formatLeadToWhatsAppMessage({
+                        firstName: formState.firstName,
+                        lastName: formState.lastName,
+                        companyName: formState.companyName,
+                        email: formState.email,
+                        phone: formState.phone,
+                        website: formState.website,
+                        industry: formState.industry,
+                        services: formState.services,
+                        adBudget: formState.adBudget,
+                        currentRevenue: formState.currentRevenue,
+                        projectDescription: formState.projectDescription
+                      });
+                      openWhatsAppChat(msg, e);
+                    }}
+                    title="Send details via WhatsApp"
+                    className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold uppercase tracking-wider text-xs py-3.5 px-8 rounded-full transition-all shadow-md active:scale-95 cursor-pointer border border-white/40"
+                  >
+                    <WhatsAppIcon className="w-4 h-4 text-white" />
+                    <span>Or Submit Details via WhatsApp</span>
+                  </button>
+                </div>
               </div>
 
             </form>
@@ -697,25 +728,42 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
                 </p>
               </div>
 
-              <button
-                type="button"
-                id="bottom-finalize-booking-btn"
-                onClick={() => handleFinalizeBooking()}
-                disabled={isFinalizing}
-                className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
-              >
-                {isFinalizing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-black" />
-                    <span>Redirecting to Confirmation...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>I've Completed My Booking → Continue</span>
-                    <ArrowRight className="w-4 h-4 stroke-[3]" />
-                  </>
-                )}
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    const msg = `Hi Deon, I'm currently on the calendar scheduler and would like to confirm my consultation booking with you via WhatsApp.`;
+                    openWhatsAppChat(msg, e);
+                  }}
+                  title="Confirm on WhatsApp"
+                  className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold uppercase tracking-wider text-xs py-4 px-6 rounded-full transition-all shadow-xl active:scale-95 cursor-pointer"
+                >
+                  <WhatsAppIcon className="w-4 h-4 text-white" />
+                  <span>Chat via WhatsApp</span>
+                </a>
+
+                <button
+                  type="button"
+                  id="bottom-finalize-booking-btn"
+                  onClick={() => handleFinalizeBooking()}
+                  disabled={isFinalizing}
+                  className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
+                >
+                  {isFinalizing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-black" />
+                      <span>Redirecting to Confirmation...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>I've Completed My Booking → Continue</span>
+                      <ArrowRight className="w-4 h-4 stroke-[3]" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
           </div>

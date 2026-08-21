@@ -7,20 +7,29 @@ export const isMobileDevice = (): boolean => {
     (window.matchMedia && window.matchMedia('(max-width: 768px)').matches && 'ontouchstart' in window);
 };
 
+/**
+ * Safely triggers phone dialing without breaking the host web application or iframe.
+ * Handles desktop Google Voice / browser extensions gracefully by:
+ * 1. Preventing top-level window navigation that causes "voice.google.com refused to connect"
+ * 2. Copying the phone number automatically to clipboard
+ * 3. Opening the phone protocol through an isolated hidden iframe
+ * 4. Dispatching a toast notification with interactive dialing & copy options
+ */
 export const handlePhoneCall = (e?: React.MouseEvent): void => {
+  // Always prevent default anchor navigation to avoid destroying the app inside an iframe
   if (e) {
-    e.preventDefault();
-    e.stopPropagation();
+    if (typeof e.preventDefault === 'function') e.preventDefault();
+    if (typeof e.stopPropagation === 'function') e.stopPropagation();
   }
 
-  // Copy number to clipboard automatically
+  // 1. Copy number to clipboard automatically as a reliable fallback
   if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(PHONE_NUMBER).catch(() => {
-      // Fallback
+      // Safe fallback if clipboard permission is restricted
     });
   }
 
-  // Dispatch custom event for visual toast notification
+  // 2. Dispatch event to show the visual dialer toast / floating feedback
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('phone-call-triggered', {
       detail: {
@@ -31,21 +40,31 @@ export const handlePhoneCall = (e?: React.MouseEvent): void => {
     }));
   }
 
-  // If on mobile device, trigger native dialer safely
-  if (isMobileDevice()) {
+  // 3. Trigger protocol handler in an isolated hidden sandbox element so that
+  // any browser extension (like Google Voice, FaceTime, Skype) attempts to open without
+  // ever navigating or replacing the main application frame!
+  if (typeof document !== 'undefined') {
     try {
-      const a = document.createElement('a');
-      a.href = PHONE_TEL;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (document.body.contains(a)) {
-          document.body.removeChild(a);
-        }
-      }, 500);
-    } catch {
-      window.location.href = PHONE_TEL;
+      let safeFrame = document.getElementById('safe-tel-trigger-frame') as HTMLIFrameElement | null;
+      if (!safeFrame) {
+        safeFrame = document.createElement('iframe');
+        safeFrame.id = 'safe-tel-trigger-frame';
+        safeFrame.style.position = 'absolute';
+        safeFrame.style.top = '-9999px';
+        safeFrame.style.left = '-9999px';
+        safeFrame.style.width = '1px';
+        safeFrame.style.height = '1px';
+        safeFrame.style.opacity = '0';
+        safeFrame.style.border = 'none';
+        safeFrame.style.pointerEvents = 'none';
+        safeFrame.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(safeFrame);
+      }
+      safeFrame.src = PHONE_TEL;
+    } catch (err) {
+      console.warn('Safe dialer iframe notice:', err);
     }
   }
 };
+
+

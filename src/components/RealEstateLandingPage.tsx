@@ -45,9 +45,11 @@ import {
   Loader2,
   ExternalLink
 } from 'lucide-react';
-import { PHONE_NUMBER, PHONE_TEL, GOOGLE_CALENDAR_APPOINTMENT_URL, GOOGLE_CALENDAR_EMBED_URL, AI_SERVICE_OPTIONS } from '../data/contentData';
+import { PHONE_NUMBER, PHONE_TEL, WHATSAPP_NUMBER, WHATSAPP_URL, GOOGLE_CALENDAR_APPOINTMENT_URL, GOOGLE_CALENDAR_EMBED_URL, AI_SERVICE_OPTIONS } from '../data/contentData';
 import { handlePhoneCall } from '../utils/phone';
 import { getUpcomingBookingDays, getTodayFormatted } from '../utils/dateUtils';
+import { WhatsAppIcon } from './WhatsAppIcon';
+import { openWhatsAppChat, formatLeadToWhatsAppMessage } from '../utils/whatsapp';
 const TARGET_ADMIN_EMAIL = 'deonhowardppc@gmail.com';
 import { IndustrySubNav } from './IndustrySubNav';
 import { submitToGoogleScript } from '../services/googleScript';
@@ -1657,14 +1659,41 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  id="re-cta-submit-btn"
-                  className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-lg transition-all cursor-pointer border border-white/20 transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
-                >
-                  <span>Next: Select Date & Time</span>
-                  <ArrowRight className="w-4 h-4 text-[#9ce2c7]" />
-                </button>
+                <div className="space-y-3 pt-2">
+                  <button
+                    type="submit"
+                    id="re-cta-submit-btn"
+                    className="w-full bg-black hover:bg-gray-900 text-white font-bold uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-lg transition-all cursor-pointer border border-white/20 transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
+                  >
+                    <span>Next: Select Date & Time</span>
+                    <ArrowRight className="w-4 h-4 text-[#9ce2c7]" />
+                  </button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const msg = formatLeadToWhatsAppMessage({
+                          firstName: reForm.firstName,
+                          lastName: reForm.lastName,
+                          companyName: reForm.companyName,
+                          email: reForm.email,
+                          phone: reForm.phone,
+                          website: reForm.website,
+                          industry: `Real Estate (${reForm.reRole})`,
+                          services: reForm.services,
+                          adBudget: reForm.adBudget,
+                          projectDescription: reForm.projectDescription
+                        });
+                        openWhatsAppChat(msg, e);
+                      }}
+                      className="w-full inline-flex items-center justify-center space-x-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold uppercase tracking-wider text-xs py-3.5 px-6 rounded-full transition-all shadow-md active:scale-95 cursor-pointer"
+                    >
+                      <WhatsAppIcon className="w-4 h-4 text-white" />
+                      <span>Or Send Real Estate Request via WhatsApp</span>
+                    </button>
+                  </div>
+                </div>
 
               </form>
             </div>
@@ -1729,25 +1758,42 @@ export const RealEstateLandingPage: React.FC<RealEstateLandingPageProps> = ({
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  id="re-bottom-finalize-booking-btn"
-                  onClick={() => handleFinalizeREBooking()}
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Clock className="w-4 h-4 animate-spin text-black" />
-                      <span>Redirecting to Confirmation...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>I've Completed My Booking → Continue</span>
-                      <ArrowRight className="w-4 h-4 stroke-[3]" />
-                    </>
-                  )}
-                </button>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                  <a
+                    href={WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      const msg = `Hi Deon, I'm booking a Real Estate Automation strategy session on your website and want to connect via WhatsApp.`;
+                      openWhatsAppChat(msg, e);
+                    }}
+                    title="Connect via WhatsApp"
+                    className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold uppercase tracking-wider text-xs py-4 px-6 rounded-full transition-all shadow-xl active:scale-95 cursor-pointer"
+                  >
+                    <WhatsAppIcon className="w-4 h-4 text-white" />
+                    <span>WhatsApp</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    id="re-bottom-finalize-booking-btn"
+                    onClick={() => handleFinalizeREBooking()}
+                    disabled={isSubmitting}
+                    className="w-full sm:w-auto shrink-0 bg-[#a3e6cd] hover:bg-[#8ee0c1] text-gray-950 font-black uppercase tracking-widest text-xs py-4 px-8 rounded-full shadow-2xl transition-all cursor-pointer border border-[#7ed4b4] transform hover:-translate-y-0.5 disabled:opacity-75 flex items-center justify-center space-x-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Clock className="w-4 h-4 animate-spin text-black" />
+                        <span>Redirecting to Confirmation...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>I've Completed My Booking → Continue</span>
+                        <ArrowRight className="w-4 h-4 stroke-[3]" />
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
             </div>

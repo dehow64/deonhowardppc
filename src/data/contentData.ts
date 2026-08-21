@@ -1,7 +1,10 @@
 import { IndustryItem, ServiceItem, ProcessStep, CaseStudy } from '../types';
 
-export const PHONE_NUMBER = "(708) 669-6410";
-export const PHONE_TEL = "tel:+17086696410";
+export const PHONE_NUMBER = "(786) 361-4886";
+export const PHONE_TEL = "tel:+17863614886";
+export const WHATSAPP_NUMBER = "+52 999 512 5328";
+export const WHATSAPP_RAW = "529995125328";
+export const WHATSAPP_URL = "https://wa.me/529995125328";
 export const EMAIL_ADDRESS = "info@deonhowardppc.com";
 export const GOOGLE_CALENDAR_APPOINTMENT_URL = "https://calendar.app.google/yBNtM5uPKc7rv5bT7";
 export const GOOGLE_CALENDAR_EMBED_URL = "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ2EWkPewPj9fewcHQgiC1u5VM16JJ0C6N7CZoxcTfK3GV9L0M0PE-TciWdua6mD_v1WwiplMlJZ?gv=true";
@@ -15,8 +18,8 @@ export const MARKETING_LAPTOP_IMG = "/images/Confused%20Marketer.jpeg.png";
 // Hands holding pen writing strategy notes
 export const STRATEGY_CALL_IMG = "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80";
 
-// Callout phone photo
-export const CALLOUT_PHONE_IMG = "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80";
+// Callout phone photo - person speaking on phone call
+export const CALLOUT_PHONE_IMG = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80";
 
 export const BENEFITS_DATA = [
   {
