@@ -17,7 +17,7 @@ export const BenefitsSection: React.FC = () => {
   };
 
   return (
-    <section id="benefits" className="relative bg-[#9ce2c7] text-[#131d17] py-20 md:py-28 border-b border-[#8bd6ba]">
+    <section id="benefits" className="relative bg-[#9ce2c7] text-[#131d17] py-20 md:py-28 border-b border-[#8bd6ba] w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-2">

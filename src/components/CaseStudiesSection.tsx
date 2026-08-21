@@ -11,7 +11,7 @@ interface CaseStudiesSectionProps {
 
 export const CaseStudiesSection: React.FC<CaseStudiesSectionProps> = ({ onSelectCaseStudy }) => {
   return (
-    <section id="case-studies" className="bg-[#121212] text-white py-20 md:py-28 border-b border-white/10">
+    <section id="case-studies" className="bg-[#121212] text-white py-20 md:py-28 border-b border-white/10 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}

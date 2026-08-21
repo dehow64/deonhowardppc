@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 
 export const StrugglingSection: React.FC = () => {
   return (
-    <section id="struggling" className="bg-[#9ce2c7] text-[#131d17] py-20 md:py-28 border-b border-[#8bd6ba]">
+    <section id="struggling" className="bg-[#9ce2c7] text-[#131d17] py-20 md:py-28 border-b border-[#8bd6ba] w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           

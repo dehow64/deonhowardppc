@@ -10,7 +10,7 @@ interface CuriousCalloutProps {
 
 export const CuriousCallout: React.FC<CuriousCalloutProps> = ({ onBookClick }) => {
   return (
-    <section className="bg-[#9ce2c7] py-16 md:py-24 border-b border-[#8bd6ba]">
+    <section className="bg-[#9ce2c7] py-16 md:py-24 border-b border-[#8bd6ba] w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

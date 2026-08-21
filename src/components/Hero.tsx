@@ -47,7 +47,7 @@ export const Hero: React.FC<HeroProps> = ({ onBookClick }) => {
   };
 
   return (
-    <section id="home" className="relative bg-[#121212] text-white overflow-hidden py-16 md:py-24 border-b border-white/10">
+    <section id="home" className="relative bg-[#121212] text-white overflow-hidden py-16 md:py-24 border-b border-white/10 w-full">
       {/* Abstract Background SVG Pattern */}
       <div className="absolute inset-0 opacity-15 pointer-events-none overflow-hidden">
         <svg className="w-full h-full object-cover" viewBox="0 0 1440 600" fill="none" xmlns="http://www.w3.org/2000/svg">

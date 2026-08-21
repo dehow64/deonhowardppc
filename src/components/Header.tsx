@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({ onBookClick, onRealEstateClick }
   return (
     <>
       {/* Top Header Bar without inline menu links */}
-      <header className="sticky top-0 z-40 bg-[#9ce2c7]/95 backdrop-blur-md border-b border-black/15 text-[#131d17]">
+      <header className="sticky top-0 z-40 bg-[#9ce2c7]/95 backdrop-blur-md border-b border-black/15 text-[#131d17] w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
           {/* Brand Logo */}

@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export const ProcessSection: React.FC = () => {
   return (
-    <section id="process" className="bg-[#9ce2c7] text-[#131d17] py-20 md:py-28 border-b border-[#8bd6ba] relative overflow-hidden">
+    <section id="process" className="bg-[#9ce2c7] text-[#131d17] py-20 md:py-28 border-b border-[#8bd6ba] relative overflow-hidden w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Title & Intro */}

@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 
 export const AboutSection: React.FC = () => {
   return (
-    <section id="about" className="relative bg-[#121212] text-white py-20 md:py-28 border-b border-white/10 overflow-hidden">
+    <section id="about" className="relative bg-[#121212] text-white py-20 md:py-28 border-b border-white/10 overflow-hidden w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           

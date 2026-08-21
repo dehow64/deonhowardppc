@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 
 export const CalloutBanner: React.FC = () => {
   return (
-    <section className="bg-[#121212] text-white py-16 md:py-24 border-b border-white/10">
+    <section className="bg-[#121212] text-white py-16 md:py-24 border-b border-white/10 w-full">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
         
         {/* Centered Circular Image */}

@@ -300,7 +300,7 @@ export const ContactFormSection: React.FC<ContactFormSectionProps> = ({ onFormSu
   };
 
   return (
-    <section id="contact" className="bg-[#9ce2c7] text-[#131d17] py-20 md:py-28 border-b border-[#8bd6ba]">
+    <section id="contact" className="bg-[#9ce2c7] text-[#131d17] py-20 md:py-28 border-b border-[#8bd6ba] w-full">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
